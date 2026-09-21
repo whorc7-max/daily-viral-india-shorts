@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
@@ -31,8 +32,18 @@ class YouTubeUploader:
             client_id=YT_CLIENT_ID,
             client_secret=YT_CLIENT_SECRET,
         )
-        creds.refresh(Request())
-        return creds.token
+        for attempt in range(1, 4):
+            try:
+                creds.refresh(Request())
+                return creds.token
+            except Exception as exc:
+                if attempt == 3:
+                    raise RuntimeError(
+                        "YouTube authorization failed. Reauthorize the channel and "
+                        "replace YT_REFRESH_TOKEN in GitHub Secrets."
+                    ) from exc
+                print(f"YouTube token refresh attempt {attempt}/3 failed; retrying")
+                time.sleep(attempt * 2)
 
     def upload(
         self,
