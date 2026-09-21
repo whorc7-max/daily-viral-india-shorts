@@ -43,7 +43,7 @@ class ScriptGenerator:
         trends = self._trends()
         prompt = f"""
 You are the editorial producer for the Hindi YouTube Shorts channel Daily Viral India.
-Create exactly one original silent-caption Short for Indian viewers.
+Create exactly one original Hindi YouTube Short for Indian viewers.
 
 Use these current India trend leads, but verify claims and never invent details:
 {json.dumps(trends, ensure_ascii=False)}
@@ -53,7 +53,7 @@ title, description, tags, voiceover_script, visual_keywords, source_urls, durati
 
 Rules:
 - Write natural Hindi in Devanagari, approximately 90-130 words.
-- Make the script work as on-screen captions without voiceover.
+- Make the script natural for a clear Hindi voiceover and readable captions.
 - Hook viewers in the first sentence and keep sentences short for readable captions.
 - Choose one topic only and add meaningful original commentary.
 - Separate confirmed facts from rumours; avoid defamation, unsafe advice, and political claims without reliable sourcing.
