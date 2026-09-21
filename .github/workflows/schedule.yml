@@ -35,6 +35,7 @@ jobs:
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+          TTS_VOICE: ${{ vars.TTS_VOICE || 'hi-IN-MadhurNeural' }}
           YT_PRIVACY_STATUS: ${{ vars.YT_PRIVACY_STATUS || 'unlisted' }}
         run: |
           python main.py
