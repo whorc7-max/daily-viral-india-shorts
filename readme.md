@@ -1,4 +1,4 @@
-# Daily Viral India Silent Shorts
+# Daily Viral India Shorts
 
 Free GitHub Actions automation for two original Hindi YouTube Shorts per day.
 
@@ -7,8 +7,10 @@ Each run:
 1. Reads current India trend leads from Google Trends.
 2. Uses Gemini to write one original Hindi Short.
 3. Downloads optional stock images from Pexels.
-4. Renders a 45-60 second, 9:16 video with Hindi captions and no voice or music.
-5. Uploads the MP4 to YouTube using the official YouTube Data API OAuth flow.
+4. Generates a natural Hindi voiceover with Edge TTS.
+5. Selects CC0 background music from Openverse and mixes it below the voice.
+6. Renders a 45-60 second, 9:16 video with synchronized Hindi captions.
+7. Uploads the MP4 to YouTube using the official YouTube Data API OAuth flow.
 
 The schedule runs twice daily at 08:44 and 16:47 UTC. Change `.github/workflows/schedule.yml` if you want different times.
 
@@ -21,6 +23,8 @@ Add these under **Settings -> Secrets and variables -> Actions**:
 - `YT_CLIENT_SECRET`: Google Cloud OAuth desktop-app client secret.
 - `YT_REFRESH_TOKEN`: YouTube OAuth refresh token for the channel.
 - `PEXELS_API_KEY`: optional free Pexels key for stock images. If omitted, the renderer uses generated gradient backgrounds.
+
+Voice uses the free `hi-IN-MadhurNeural` Edge TTS voice by default. Set the optional `TTS_VOICE` repository variable if you prefer another Edge voice.
 
 Optional repository variables:
 
