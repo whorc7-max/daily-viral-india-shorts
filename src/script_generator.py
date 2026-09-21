@@ -85,7 +85,6 @@ Rules:
             "tags",
             "voiceover_script",
             "visual_keywords",
-            "visual_scenes",
             "source_urls",
         )
         missing = [key for key in required if not content.get(key)]
@@ -108,7 +107,8 @@ Rules:
         )
         content["tags"] = [str(tag) for tag in tags][:15]
         content["visual_keywords"] = [str(term) for term in visual_keywords][:6]
-        scenes = content["visual_scenes"] if isinstance(content["visual_scenes"], list) else []
+        scenes = content.get("visual_scenes", [])
+        scenes = scenes if isinstance(scenes, list) else []
         cleaned_scenes = []
         for scene in scenes[:8]:
             if not isinstance(scene, dict):
@@ -118,7 +118,22 @@ Rules:
             if query and prompt:
                 cleaned_scenes.append({"search_query": query, "image_prompt": prompt})
         if not cleaned_scenes:
-            raise ValueError("Gemini response did not include usable visual_scenes")
+            parts = [
+                part.strip()
+                for part in re.split(r"(?<=[।.!?])\s+", content["voiceover_script"].strip())
+                if part.strip()
+            ] or [content["title"]]
+            keywords = content["visual_keywords"] or ["India news"]
+            cleaned_scenes = [
+                {
+                    "search_query": str(keywords[index % len(keywords)]),
+                    "image_prompt": (
+                        f"Editorial visual about {keywords[index % len(keywords)]}, "
+                        f"showing the idea: {part[:160]}"
+                    ),
+                }
+                for index, part in enumerate(parts[:8])
+            ]
         content["visual_scenes"] = cleaned_scenes
         content["source_urls"] = list(dict.fromkeys([
             "https://trends.google.com/trending?geo=IN",
