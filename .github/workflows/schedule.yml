@@ -1,4 +1,4 @@
-name: YouTube Shorts Automation
+name: Daily Viral India Silent Shorts
 
 on:
   schedule:
@@ -21,13 +21,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg imagemagick fonts-dejavu-core
-
-      - name: Configure ImageMagick policy (allow text rendering)
-        run: |
-          if [ -f /etc/ImageMagick-6/policy.xml ]; then
-            sudo sed -i 's/rights="none" pattern="@\*"/rights="read" pattern="@*"/' /etc/ImageMagick-6/policy.xml
-          fi
+          sudo apt-get install -y -qq ffmpeg fonts-noto-core
 
       - name: Install Python dependencies
         run: |
@@ -36,20 +30,11 @@ jobs:
       - name: Run automation pipeline
         env:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
-          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          TTS_VOICE: ${{ vars.TTS_VOICE }}
-          TTS_MODEL: ${{ vars.TTS_MODEL }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+          YT_PRIVACY_STATUS: ${{ vars.YT_PRIVACY_STATUS || 'unlisted' }}
         run: |
           python main.py
-
-      - name: Commit updated script queue
-        run: |
-          git config user.name "yt-shorts-bot"
-          git config user.email "bot@localhost"
-          git add scripts/scripts.json
-          git diff --staged --quiet || git commit -m "Mark script as used [skip ci]"
-          git push
