@@ -32,8 +32,8 @@ def main():
             "once and replace YT_REFRESH_TOKEN in GitHub Secrets."
         ) from exc
 
-    if not os.environ.get("GEMINI_API_KEY"):
-        print("GEMINI_API_KEY is not set; the script generator will use its safe fallback.")
+    if not (os.environ.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEYS")):
+        print("No Gemini key is set; the script generator will use its safe fallback.")
     print("Credential health check passed; secret values were not printed.")
 
 
