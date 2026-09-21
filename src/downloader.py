@@ -17,9 +17,11 @@ MAX_PER_KEYWORD = 5
 class VideoDownloader:
     def __init__(self):
         if not PEXELS_API_KEY:
-            raise ValueError("PEXELS_API_KEY environment variable not set")
+            print("PEXELS_API_KEY not set; using generated gradient backgrounds")
 
     def search_clips(self, keywords: list[str]) -> list[dict]:
+        if not PEXELS_API_KEY:
+            return []
         seen = set()
         clips = []
         for kw in keywords:
@@ -49,6 +51,8 @@ class VideoDownloader:
         return clips[:MAX_CLIPS]
 
     def search_images(self, keywords: list[str]) -> list[dict]:
+        if not PEXELS_API_KEY:
+            return []
         seen = set()
         images = []
         for kw in keywords:
