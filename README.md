@@ -29,6 +29,7 @@ The schedule runs twice daily at 08:44 and 16:47 UTC. Change `.github/workflows/
 Add these under **Settings -> Secrets and variables -> Actions**:
 
 - `GEMINI_API_KEY`: Google AI Studio key used for script generation; optional because a safe fallback exists.
+- `FIREBASE_REFRESH_TOKEN`: optional Firebase Auth refresh token for loading the current key rotation set from the private AI Studio vault.
 - `YT_CLIENT_ID`: Google Cloud OAuth desktop-app client ID.
 - `YT_CLIENT_SECRET`: Google Cloud OAuth desktop-app client secret.
 - `YT_REFRESH_TOKEN`: YouTube OAuth refresh token for the channel.
@@ -51,3 +52,4 @@ Optional repository variables:
   reauthorize once and replace `YT_REFRESH_TOKEN` in GitHub Secrets.
 - Move the Google OAuth consent screen to Production to avoid Testing-mode refresh-token expiry.
 - Set Google Cloud budget alerts before enabling paid Gemini usage; billing is intentionally not enabled by code.
+- The Firebase vault bridge never prints Gemini or Firebase token values; if the vault is unavailable, the workflow falls back to `GEMINI_API_KEY`.
