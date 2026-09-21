@@ -1,6 +1,7 @@
 import hashlib
 import os
 import random
+import subprocess
 
 import requests
 
@@ -9,6 +10,30 @@ OPENVERSE_AUDIO_URL = "https://api.openverse.org/v1/audio/"
 
 
 class MusicProvider:
+    def _generated_fallback(self, output_dir: str) -> str | None:
+        output_path = os.path.join(output_dir, "music_generated_ambient.mp3")
+        try:
+            subprocess.run(
+                [
+                    "ffmpeg", "-y",
+                    "-f", "lavfi", "-i", "sine=frequency=196:duration=120",
+                    "-f", "lavfi", "-i", "sine=frequency=293.66:duration=120",
+                    "-filter_complex",
+                    "[0:a]volume=0.035[a0];[1:a]volume=0.02[a1];"
+                    "[a0][a1]amix=inputs=2:duration=longest,lowpass=f=900,"
+                    "afade=t=in:st=0:d=2,afade=t=out:st=110:d=10",
+                    "-q:a", "6", output_path,
+                ],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            print("  Using generated royalty-free ambient fallback music")
+            return output_path
+        except Exception as exc:
+            print(f"  Generated music fallback failed: {exc}")
+            return None
+
     def download(self, keywords: list[str], output_dir: str) -> str | None:
         queries = []
         if keywords:
@@ -43,5 +68,4 @@ class MusicProvider:
             except Exception as exc:
                 print(f"  Music search failed for '{query}': {exc}")
 
-        return None
-
+        return self._generated_fallback(output_dir)
