@@ -34,12 +34,17 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check -r requirements.txt
 
+      - name: Load Gemini keys from Firebase vault
+        env:
+          FIREBASE_REFRESH_TOKEN: ${{ secrets.FIREBASE_REFRESH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python scripts/fetch_gemini_keys.py >> "$GITHUB_ENV"
+
       - name: Check credentials and service health
         env:
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python scripts/health_check.py
 
       - name: Run automation pipeline
@@ -48,7 +53,6 @@ jobs:
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
           TTS_VOICE: ${{ vars.TTS_VOICE || 'hi-IN-MadhurNeural' }}
           YT_PRIVACY_STATUS: ${{ vars.YT_PRIVACY_STATUS || 'public' }}
