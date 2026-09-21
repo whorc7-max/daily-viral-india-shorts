@@ -92,6 +92,8 @@ class SilentVideoEditor:
         script: str,
         output_path: str,
         target_duration: float = 55,
+        voice_path: str | None = None,
+        music_path: str | None = None,
     ) -> str:
         phrases = _phrases(script)
         weights = [max(1, len(phrase.split())) for phrase in phrases]
@@ -143,16 +145,45 @@ class SilentVideoEditor:
                 file.write(f"duration {duration:.3f}\n")
             file.write(f"file '{Path(slide_paths[-1][0]).as_posix()}'\n")
 
+        video_only_path = os.path.join(self.workdir, "video_only.mp4")
         subprocess.run(
             [
                 "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", manifest,
                 "-t", f"{target_duration:.3f}", "-r", "30", "-an",
                 "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-                output_path,
+                video_only_path,
             ],
             check=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             text=True,
         )
+
+        if not voice_path:
+            os.replace(video_only_path, output_path)
+            return output_path
+
+        if music_path:
+            audio_args = [
+                "-i", voice_path,
+                "-stream_loop", "-1", "-i", music_path,
+                "-filter_complex",
+                "[2:a]volume=0.10[music];[1:a][music]amix=inputs=2:duration=first:dropout_transition=2[aout]",
+                "-map", "0:v:0", "-map", "[aout]",
+            ]
+        else:
+            audio_args = ["-i", voice_path, "-map", "0:v:0", "-map", "1:a:0"]
+
+        subprocess.run(
+            [
+                "ffmpeg", "-y", "-i", video_only_path, *audio_args,
+                "-t", f"{target_duration:.3f}", "-c:v", "copy", "-c:a", "aac",
+                "-shortest", "-movflags", "+faststart", output_path,
+            ],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        os.remove(video_only_path)
         return output_path
