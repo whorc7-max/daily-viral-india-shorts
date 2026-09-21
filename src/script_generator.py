@@ -14,6 +14,13 @@ except ImportError as exc:  # pragma: no cover - dependency is installed in Acti
 
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GEMINI_API_KEYS = list(dict.fromkeys(
+    key.strip()
+    for key in os.environ.get("GEMINI_API_KEYS", "").split(",")
+    if key.strip()
+))
+if GEMINI_API_KEY and GEMINI_API_KEY not in GEMINI_API_KEYS:
+    GEMINI_API_KEYS.append(GEMINI_API_KEY)
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 TREND_URL = "https://trends.google.com/trending/rss?geo=IN"
 
@@ -56,10 +63,10 @@ def _fallback_content(trends: list[str]) -> dict:
 
 class ScriptGenerator:
     def __init__(self):
-        self.client = None
-        if GEMINI_API_KEY:
+        self.clients = []
+        for api_key in GEMINI_API_KEYS:
             try:
-                self.client = genai.Client(api_key=GEMINI_API_KEY)
+                self.clients.append(genai.Client(api_key=api_key))
             except Exception as exc:
                 print(f"Gemini client unavailable: {exc}")
 
@@ -103,27 +110,33 @@ Rules:
 - description must include a brief disclosure that the Short uses original commentary and licensed/stock visuals.
 """.strip()
 
-        if not self.client:
+        if not self.clients:
             print("GEMINI_API_KEY is not set; using the safe script fallback")
             return _fallback_content(trends)
 
         content = None
-        for attempt in range(1, 4):
-            try:
-                response = self.client.models.generate_content(
-                    model=GEMINI_MODEL,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        temperature=0.7,
-                        response_mime_type="application/json",
-                    ),
-                )
-                content = _clean_json(response.text)
+        for client_index, client in enumerate(self.clients, start=1):
+            for attempt in range(1, 4):
+                try:
+                    response = client.models.generate_content(
+                        model=GEMINI_MODEL,
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            temperature=0.7,
+                            response_mime_type="application/json",
+                        ),
+                    )
+                    content = _clean_json(response.text)
+                    break
+                except Exception as exc:
+                    print(
+                        f"Gemini key {client_index}/{len(self.clients)} "
+                        f"attempt {attempt}/3 failed: {exc}"
+                    )
+                    if attempt < 3:
+                        time.sleep(attempt * 3)
+            if content is not None:
                 break
-            except Exception as exc:
-                print(f"Gemini attempt {attempt}/3 failed: {exc}")
-                if attempt < 3:
-                    time.sleep(attempt * 3)
 
         if content is None:
             print("Gemini unavailable; using the safe script fallback")
