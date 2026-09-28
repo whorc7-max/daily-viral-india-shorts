@@ -10,7 +10,10 @@ FIREBASE_API_KEY = os.environ.get(
     "AIzaSyDZxgX4SBNfWTMMNjaCPGpwM-fJnzz-qQY",
 )
 FIREBASE_PROJECT_ID = "radiant-song-lmn89"
-FIREBASE_DATABASE_ID = "ai-studio-f73e5bc0-cd96-44a3-ac5c-632b8094364a"
+FIREBASE_DATABASE_ID = os.environ.get(
+    "FIREBASE_DATABASE_ID",
+    "ai-studio-f73e5bc0-cd96-44a3-ac5c-632b8094364a",
+)
 FIREBASE_COLLECTION = os.environ.get("FIREBASE_COLLECTION", "apiKeys")
 KEY_OUTPUT_PREFIX = os.environ.get("KEY_OUTPUT_PREFIX", "GEMINI")
 TOKEN_URL = "https://securetoken.googleapis.com/v1/token"
