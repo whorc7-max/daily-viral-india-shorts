@@ -95,7 +95,7 @@ Return ONLY valid JSON with these fields:
 title, description, tags, voiceover_script, visual_keywords, visual_scenes, source_urls, duration_seconds
 
 Rules:
-- Write natural Hindi in Devanagari, approximately 90-130 words.
+- Write natural Hindi in Devanagari, approximately 65-85 words so the voiceover stays near 45-60 seconds.
 - Make the script natural for a clear Hindi voiceover and readable captions.
 - Hook viewers in the first sentence and keep sentences short for readable captions.
 - Choose one topic only and add meaningful original commentary.
