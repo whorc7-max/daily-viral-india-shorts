@@ -1,0 +1,63 @@
+name: One-time YouTube OAuth exchange
+
+on:
+  workflow_dispatch:
+    inputs:
+      oauth_code:
+        description: OAuth authorization code
+        required: true
+        type: string
+      code_verifier:
+        description: PKCE code verifier
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  exchange:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exchange authorization code
+        env:
+          OAUTH_CODE: ${{ inputs.oauth_code }}
+          CODE_VERIFIER: ${{ inputs.code_verifier }}
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import pathlib
+          import urllib.parse
+          import urllib.request
+
+          form = urllib.parse.urlencode({
+              "code": os.environ["OAUTH_CODE"],
+              "client_id": os.environ["CLIENT_ID"],
+              "client_secret": os.environ["CLIENT_SECRET"],
+              "code_verifier": os.environ["CODE_VERIFIER"],
+              "grant_type": "authorization_code",
+              "redirect_uri": "http://localhost",
+          }).encode()
+          request = urllib.request.Request(
+              "https://oauth2.googleapis.com/token",
+              data=form,
+              method="POST",
+          )
+          with urllib.request.urlopen(request) as response:
+              payload = json.loads(response.read().decode())
+          if "refresh_token" not in payload:
+              raise RuntimeError(payload)
+          pathlib.Path("yt_refresh_token.txt").write_text(
+              payload["refresh_token"],
+              encoding="utf-8",
+          )
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: youtube-refresh-token
+          path: yt_refresh_token.txt
+          retention-days: 1
