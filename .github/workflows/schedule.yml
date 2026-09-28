@@ -69,3 +69,11 @@ jobs:
         run: |
           python main.py
 
+      - name: Archive rendered video
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-short-${{ github.run_number }}
+          path: final_short.mp4
+          if-no-files-found: ignore
+          retention-days: 14
