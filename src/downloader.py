@@ -73,8 +73,8 @@ class VideoDownloader:
         normalized = []
         for scene in scenes:
             if isinstance(scene, dict):
-                query = str(scene.get("search_query", "")).strip()
-                prompt = str(scene.get("image_prompt", "")).strip()
+                query = str(scene.get("search_query") or scene.get("query") or "").strip()
+                prompt = str(scene.get("image_prompt") or scene.get("prompt") or query).strip()
             else:
                 query = str(scene).strip()
                 prompt = query
