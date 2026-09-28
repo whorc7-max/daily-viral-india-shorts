@@ -22,7 +22,24 @@ def _font(name: str, size: int):
     return ImageFont.load_default()
 
 
-def _phrases(script: str) -> list[str]:
+def _phrases(script: str, scene_specs: list[dict] | None = None) -> list[str]:
+    if scene_specs:
+        beats = [
+            str(
+                scene.get("voiceover_text")
+                or scene.get("narration")
+                or scene.get("text")
+                or ""
+            ).strip()
+            for scene in scene_specs
+            if isinstance(scene, dict)
+        ]
+        beats = [beat for beat in beats if beat]
+        if beats and sum(len(beat.split()) for beat in beats) >= max(
+            1, int(len(script.split()) * 0.9)
+        ):
+            return beats
+
     parts = re.split(r"(?<=[।.!?])\s+", script.strip())
     return [part.strip() for part in parts if part.strip()] or ["Daily Viral India"]
 
@@ -121,8 +138,10 @@ class SilentVideoEditor:
         voice_path: str | None = None,
         music_path: str | None = None,
         clip_paths: list[str | None] | None = None,
+        scene_specs: list[dict] | None = None,
     ) -> str:
-        phrases = _phrases(script)
+        phrases = _phrases(script, scene_specs)
+        print(f"  Rendering {len(phrases)} narration-aligned visual beat(s)")
         weights = [max(1, len(phrase.split())) for phrase in phrases]
         total_weight = sum(weights)
         durations = [target_duration * weight / total_weight for weight in weights]

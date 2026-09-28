@@ -53,6 +53,7 @@ def _fallback_content(trends: list[str]) -> dict:
             {
                 "search_query": keywords[index],
                 "image_prompt": f"Editorial vertical visual illustrating: {sentence}",
+                "voiceover_text": sentence,
             }
             for index, sentence in enumerate(sentences)
         ],
@@ -100,14 +101,17 @@ Rules:
 - Choose one topic only and add meaningful original commentary.
 - Separate confirmed facts from rumours; avoid defamation, unsafe advice, and political claims without reliable sourcing.
 - Do not copy any source wording, thumbnail, footage, music, or song.
-- visual_keywords must contain 4-6 short English search terms for royalty-cleared stock images.
-- visual_scenes must contain exactly one object for every sentence in voiceover_script, in narration order. Each object must have:
-  {{"search_query": "2-5 English words for a relevant real image", "image_prompt": "a detailed vertical 9:16 visual prompt"}}.
-- Make each scene match the exact sentence or beat it illustrates; do not repeat the same generic image prompt.
+- visual_keywords must contain 4-6 short English search terms for royalty-cleared stock video footage.
+- visual_scenes must contain 6-16 short visual beats in narration order. Each object must have:
+  {{"voiceover_text": "the exact Hindi words spoken during this beat", "search_query": "2-5 concrete English words for the exact subject", "image_prompt": "a detailed vertical 9:16 visual prompt"}}.
+- Split the narration at natural meaning changes, usually every 4-14 spoken words, so the visual changes when the spoken idea changes.
+- The voiceover_text values, joined in order, must cover the full voiceover_script without skipping or inventing words.
+- Keep named people, teams, places, and objects in search_query. For abstract claims, use a concrete visual query that proves the idea, such as "Virat Kohli charity" for a line about his kindness.
+- Make every beat match its exact voiceover_text; do not repeat generic visuals.
 - image_prompt must describe a safe, text-free editorial visual with no logos, watermarks, or invented people.
 - source_urls must contain the Google Trends India URL and any specific source URL you can verify; never fabricate URLs.
 - duration_seconds must be between 45 and 60.
-- description must include a brief disclosure that the Short uses original commentary and licensed/stock visuals.
+- description must include a brief disclosure that the Short uses original commentary and licensed/stock video visuals.
 """.strip()
 
         if not self.clients:
@@ -178,14 +182,37 @@ Rules:
         scenes = content.get("visual_scenes", [])
         scenes = scenes if isinstance(scenes, list) else []
         cleaned_scenes = []
-        for scene in scenes[:len(sentence_parts)]:
+        for scene in scenes[:24]:
             if not isinstance(scene, dict):
                 continue
             query = str(scene.get("search_query", "")).strip()
             prompt = str(scene.get("image_prompt", "")).strip()
+            voiceover_text = str(
+                scene.get("voiceover_text")
+                or scene.get("narration")
+                or scene.get("text")
+                or ""
+            ).strip()
             if query and prompt:
-                cleaned_scenes.append({"search_query": query, "image_prompt": prompt})
-        if not cleaned_scenes:
+                cleaned_scenes.append({
+                    "search_query": query,
+                    "image_prompt": prompt,
+                    "voiceover_text": voiceover_text,
+                })
+
+        script_word_count = len(content["voiceover_script"].split())
+        beat_word_count = sum(
+            len(scene["voiceover_text"].split())
+            for scene in cleaned_scenes
+            if scene["voiceover_text"]
+        )
+        has_complete_beats = (
+            len(cleaned_scenes) >= 2
+            and all(scene["voiceover_text"] for scene in cleaned_scenes)
+            and beat_word_count >= max(1, int(script_word_count * 0.9))
+        )
+
+        if not has_complete_beats:
             keywords = content["visual_keywords"] or ["India news"]
             cleaned_scenes = [
                 {
@@ -194,20 +221,10 @@ Rules:
                         f"Editorial visual about {keywords[index % len(keywords)]}, "
                         f"showing the idea: {part[:160]}"
                     ),
+                    "voiceover_text": part,
                 }
                 for index, part in enumerate(sentence_parts)
             ]
-        elif len(cleaned_scenes) < len(sentence_parts):
-            keywords = content["visual_keywords"] or ["India news"]
-            for index in range(len(cleaned_scenes), len(sentence_parts)):
-                part = sentence_parts[index]
-                cleaned_scenes.append({
-                    "search_query": str(keywords[index % len(keywords)]),
-                    "image_prompt": (
-                        f"Editorial visual about {keywords[index % len(keywords)]}, "
-                        f"showing the idea: {part[:160]}"
-                    ),
-                })
         content["visual_scenes"] = cleaned_scenes
         content["source_urls"] = list(dict.fromkeys([
             "https://trends.google.com/trending?geo=IN",
