@@ -34,10 +34,17 @@ def _clean_json(text: str) -> dict:
 def _fallback_content(trends: list[str]) -> dict:
     topic = trends[0] if trends else "भारत और दुनिया की आज की महत्वपूर्ण खबरें"
     sentences = [
-        f"आज की ट्रेंडिंग चर्चा का विषय है: {topic}।",
-        "इस विषय ने लोगों का ध्यान इसलिए खींचा है क्योंकि इससे जुड़ी नई जानकारी सामने आ रही है।",
-        "किसी भी निष्कर्ष से पहले विश्वसनीय स्रोतों और आधिकारिक अपडेट को देखना जरूरी है।",
-        "हम इस विषय पर आगे की पुष्टि होने पर आपको संक्षेप में अपडेट देते रहेंगे।",
+        f"आज की विस्तृत ट्रेंडिंग चर्चा का विषय है: {topic}।",
+        "इस विषय ने देशभर में लोगों का ध्यान खींचा है और सोशल मीडिया पर भी इसकी चर्चा लगातार बढ़ रही है।",
+        "सबसे पहले यह समझना जरूरी है कि इस मामले में अभी तक कौन सी जानकारी सामने आई है और कौन सी बातें केवल अनुमान हैं।",
+        "उपलब्ध शुरुआती जानकारी के अनुसार, इस विषय का असर आम लोगों, संबंधित संस्थाओं और आने वाले फैसलों पर पड़ सकता है।",
+        "इसी वजह से अलग-अलग लोग अपने अनुभव, सवाल और उम्मीदें साझा कर रहे हैं।",
+        "हालांकि किसी वायरल दावे को सच मानने से पहले आधिकारिक बयान और विश्वसनीय रिपोर्ट देखना बेहद जरूरी है।",
+        "इस कहानी का एक महत्वपूर्ण पहलू यह भी है कि इसका संबंध भारत में बदलती पसंद, तकनीक और सार्वजनिक चर्चा से जुड़ता है।",
+        "आने वाले दिनों में नए अपडेट, आधिकारिक आंकड़े या संबंधित लोगों की प्रतिक्रिया तस्वीर को और साफ कर सकती है।",
+        "दर्शकों के लिए सबसे सही तरीका यही है कि वे जल्दबाजी में निष्कर्ष न निकालें और खबर को जिम्मेदारी से साझा करें।",
+        "हम इस विषय पर नजर बनाए रखेंगे और पुष्टि होने वाली महत्वपूर्ण जानकारी आपको सरल भाषा में बताते रहेंगे।",
+        "आपके हिसाब से इस पूरे मामले का सबसे बड़ा असर किस क्षेत्र पर पड़ेगा, अपनी राय जरूर बताइए।",
     ]
     keywords = ["India news", "breaking news", "digital news", "people discussion"]
     return {
@@ -58,7 +65,7 @@ def _fallback_content(trends: list[str]) -> dict:
             for index, sentence in enumerate(sentences)
         ],
         "source_urls": ["https://trends.google.com/trending?geo=IN"],
-        "duration_seconds": 50,
+        "duration_seconds": 150,
     }
 
 
@@ -95,14 +102,14 @@ Return ONLY valid JSON with these fields:
 title, description, tags, voiceover_script, visual_keywords, visual_scenes, source_urls, duration_seconds
 
 Rules:
-- Write natural Hindi in Devanagari, approximately 65-85 words so the voiceover stays near 45-60 seconds.
+- Write natural Hindi in Devanagari, approximately 150-210 words so the voiceover stays near 120-180 seconds.
 - Make the script natural for a clear Hindi voiceover and readable captions.
 - Hook viewers in the first sentence and keep sentences short for readable captions.
 - Choose one topic only and add meaningful original commentary.
 - Separate confirmed facts from rumours; avoid defamation, unsafe advice, and political claims without reliable sourcing.
 - Do not copy any source wording, thumbnail, footage, music, or song.
 - visual_keywords must contain 4-6 short English search terms for royalty-cleared stock video footage.
-- visual_scenes must contain 6-16 short visual beats in narration order. Each object must have:
+- visual_scenes must contain 10-24 short visual beats in narration order. Each object must have:
   {{"voiceover_text": "the exact Hindi words spoken during this beat", "search_query": "2-5 concrete English words for the exact subject", "image_prompt": "a detailed vertical 9:16 visual prompt"}}.
 - Split the narration at natural meaning changes, usually every 4-14 spoken words, so the visual changes when the spoken idea changes.
 - The voiceover_text values, joined in order, must cover the full voiceover_script without skipping or inventing words.
@@ -110,7 +117,7 @@ Rules:
 - Make every beat match its exact voiceover_text; do not repeat generic visuals.
 - image_prompt must describe a safe, text-free editorial visual with no logos, watermarks, or invented people.
 - source_urls must contain the Google Trends India URL and any specific source URL you can verify; never fabricate URLs.
-- duration_seconds must be between 45 and 60.
+- duration_seconds must be between 120 and 180.
 - description must include a brief disclosure that the Short uses original commentary and licensed/stock video visuals.
 """.strip()
 
@@ -159,7 +166,7 @@ Rules:
             raise ValueError(f"Gemini response missing fields: {', '.join(missing)}")
 
         content["duration_seconds"] = min(
-            60, max(45, int(content.get("duration_seconds", 55)))
+            180, max(120, int(content.get("duration_seconds", 150)))
         )
         tags = content["tags"] if isinstance(content["tags"], list) else [content["tags"]]
         visual_keywords = (
