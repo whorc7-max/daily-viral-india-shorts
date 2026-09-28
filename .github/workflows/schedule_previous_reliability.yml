@@ -1,9 +1,6 @@
-name: Daily Viral India Shorts With Voice And Music
+name: Legacy workflow (manual only)
 
 on:
-  schedule:
-    - cron: "44 8 * * *"
-    - cron: "47 16 * * *"
   workflow_dispatch:
 
 jobs:
