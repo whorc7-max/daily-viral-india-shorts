@@ -42,7 +42,7 @@ def _read_firestore_keys(id_token: str, user_id: str) -> list[str]:
     page_token = None
 
     while True:
-        params = {"pageSize": 100}
+        params = {"pageSize": 100, "key": FIREBASE_API_KEY}
         if page_token:
             params["pageToken"] = page_token
         response = requests.get(
