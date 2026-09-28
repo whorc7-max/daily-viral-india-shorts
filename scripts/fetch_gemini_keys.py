@@ -64,7 +64,9 @@ def _read_firestore_keys(id_token: str, user_id: str) -> list[str]:
 
 def _configured_keys() -> list[str]:
     refresh_token = os.environ.get("FIREBASE_REFRESH_TOKEN", "").strip()
+    fallback = os.environ.get(f"{KEY_OUTPUT_PREFIX}_API_KEY", "").strip()
     keys: list[str] = []
+
     if refresh_token:
         try:
             id_token, user_id = _refresh_id_token(refresh_token)
@@ -73,19 +75,23 @@ def _configured_keys() -> list[str]:
                 f"Loaded {len(keys)} {KEY_OUTPUT_PREFIX} key(s) from the Firebase vault.",
                 file=sys.stderr,
             )
-        except Exception as exc:
-            print(
-                f"Firebase vault unavailable; using the static {KEY_OUTPUT_PREFIX} secret if present "
-                f"({type(exc).__name__}).",
-                file=sys.stderr,
-            )
-    else:
+        except Exception:
+            if fallback:
+                print(
+                    f"Using the configured static {KEY_OUTPUT_PREFIX} key; Firebase vault sync skipped.",
+                    file=sys.stderr,
+                )
+            else:
+                print(
+                    f"Firebase vault unavailable and no static {KEY_OUTPUT_PREFIX} key is configured.",
+                    file=sys.stderr,
+                )
+    elif not fallback:
         print(
-            f"FIREBASE_REFRESH_TOKEN is not set; using the static {KEY_OUTPUT_PREFIX} secret.",
+            f"FIREBASE_REFRESH_TOKEN is not set and no static {KEY_OUTPUT_PREFIX} key is configured.",
             file=sys.stderr,
         )
 
-    fallback = os.environ.get(f"{KEY_OUTPUT_PREFIX}_API_KEY", "").strip()
     if fallback and fallback not in keys:
         keys.append(fallback)
     return keys
