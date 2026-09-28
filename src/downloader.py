@@ -18,6 +18,7 @@ if PEXELS_API_KEY and PEXELS_API_KEY not in PEXELS_API_KEYS:
 PEXELS_VIDEO_URL = "https://api.pexels.com/videos/search"
 PEXELS_PHOTO_URL = "https://api.pexels.com/v1/search"
 OPENVERSE_IMAGE_URL = "https://api.openverse.org/v1/images/"
+WIKIMEDIA_API_URL = "https://commons.wikimedia.org/w/api.php"
 
 MAX_IMAGES = 24
 MAX_PER_KEYWORD = 5
@@ -114,6 +115,74 @@ class VideoDownloader:
             selected = find_video(query)
             if selected:
                 clips[remaining.pop(0)] = selected
+        return clips
+
+    def search_wikimedia_videos(self, scenes: list[dict] | list[str]) -> list[dict | None]:
+        """Find freely licensed motion clips from Wikimedia Commons."""
+        normalized = self._queries(scenes)
+        clips: list[dict | None] = [None] * len(normalized)
+        seen_urls: set[str] = set()
+        headers = {"User-Agent": "daily-viral-india-shorts/1.0"}
+
+        def candidates(query: str) -> list[dict]:
+            try:
+                response = requests.get(
+                    WIKIMEDIA_API_URL,
+                    params={
+                        "action": "query",
+                        "format": "json",
+                        "origin": "*",
+                        "generator": "search",
+                        "gsrsearch": f"{query} filetype:video",
+                        "gsrnamespace": 6,
+                        "gsrlimit": 10,
+                        "prop": "imageinfo",
+                        "iiprop": "url|mime|size",
+                    },
+                    headers=headers,
+                    timeout=20,
+                )
+                response.raise_for_status()
+                pages = response.json().get("query", {}).get("pages", {})
+                results = []
+                for page in pages.values():
+                    info = (page.get("imageinfo") or [{}])[0]
+                    url = info.get("url")
+                    mime = info.get("mime", "")
+                    size = info.get("size") or 0
+                    if not url or not mime.startswith("video/"):
+                        continue
+                    if size and size > 120_000_000:
+                        continue
+                    results.append({
+                        "id": f"commons_{page.get('pageid')}",
+                        "url": url,
+                    })
+                return results
+            except requests.RequestException as error:
+                print(f"Wikimedia video search failed for {query!r}: {error}")
+                return []
+
+        for index, scene in enumerate(normalized):
+            for clip in candidates(scene["query"]):
+                if clip["url"] not in seen_urls:
+                    clips[index] = clip
+                    seen_urls.add(clip["url"])
+                    break
+
+        remaining = [index for index, clip in enumerate(clips) if clip is None]
+        for query in ("India", "people", "news", "technology", "business", "nature"):
+            if not remaining:
+                break
+            for clip in candidates(query):
+                if clip["url"] in seen_urls:
+                    continue
+                index = remaining.pop(0)
+                clips[index] = clip
+                seen_urls.add(clip["url"])
+                if not remaining:
+                    break
+
         return clips
 
     def search_pexels_images(self, scenes: list[dict] | list[str]) -> list[dict]:
@@ -231,13 +300,29 @@ class VideoDownloader:
             self.download_clip(clip, output_dir) if clip else None
             for clip in clips
         ]
+
+        missing_video_indexes = [index for index, clip_path in enumerate(clip_paths) if clip_path is None]
+        if missing_video_indexes:
+            print(f"Searching Wikimedia Commons for {len(missing_video_indexes)} free motion video fallback(s)...")
+            fallback_clips = self.search_wikimedia_videos(
+                [normalized[index] for index in missing_video_indexes]
+            )
+            added = 0
+            for index, clip in zip(missing_video_indexes, fallback_clips):
+                if clip:
+                    clips[index] = clip
+                    clip_paths[index] = self.download_clip(clip, output_dir)
+                    if clip_paths[index]:
+                        added += 1
+            print(f"  Found {added} free motion video fallback(s)")
+
         if not allow_image_fallback:
             missing = sum(path is None for path in clip_paths)
             if missing:
                 print(f"  {missing} scene(s) have no real video clip")
             return clip_paths, [None] * len(normalized)
 
-        image_indexes = [index for index, clip in enumerate(clips) if clip is None]
+        image_indexes = [index for index, clip_path in enumerate(clip_paths) if clip_path is None]
         image_scenes = [normalized[index] for index in image_indexes]
         print(f"Searching for image fallback for {len(image_scenes)} scene(s)...")
         openverse_images = self.search_openverse_images(image_scenes)
