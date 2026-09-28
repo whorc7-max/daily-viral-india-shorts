@@ -62,15 +62,16 @@ def main():
             content["visual_scenes"],
             workdir,
             fallback_keywords=content["visual_keywords"],
+            allow_image_fallback=True,
         )
         temp_files.extend(path for path in video_paths + image_paths if path)
         missing_clips = sum(path is None for path in video_paths)
         print(f"  Downloaded {len(video_paths) - missing_clips} real video clips")
-        if missing_clips:
-            raise RuntimeError(
-                f"Pexels did not provide real video for {missing_clips} scene(s); "
-                "photo fallback is disabled. Add a valid Pexels video API key or retry."
-            )
+        fallback_images = sum(
+            video_path is None and image_path is not None
+            for video_path, image_path in zip(video_paths, image_paths)
+        )
+        print(f"  Using {fallback_images} image fallback(s) where video was unavailable")
 
         print("\n[5/7] Rendering a captioned video with voice and music...")
         output_path = os.path.join(workdir, "final_short.mp4")
