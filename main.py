@@ -87,7 +87,12 @@ def main():
             scene_specs=content["visual_scenes"],
         )
         temp_files.append(output_path)
-        print(f"  Video saved: {output_path}")
+
+        # Keep a copy outside the temporary directory so Actions can archive it
+        # even when YouTube rejects the upload because of a channel limit.
+        preserved_output = os.path.join(os.getcwd(), "final_short.mp4")
+        shutil.copy2(output_path, preserved_output)
+        print(f"  Video saved: {preserved_output}")
 
         print("\n[6/7] Uploading to YouTube...")
         uploader = YouTubeUploader()
