@@ -84,6 +84,7 @@ def main():
             voice_path=voice_path,
             music_path=music_path,
             clip_paths=video_paths,
+            scene_specs=content["visual_scenes"],
         )
         temp_files.append(output_path)
         print(f"  Video saved: {output_path}")
