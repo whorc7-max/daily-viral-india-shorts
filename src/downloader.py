@@ -19,6 +19,22 @@ PEXELS_VIDEO_URL = "https://api.pexels.com/videos/search"
 PEXELS_PHOTO_URL = "https://api.pexels.com/v1/search"
 OPENVERSE_IMAGE_URL = "https://api.openverse.org/v1/images/"
 WIKIMEDIA_API_URL = "https://commons.wikimedia.org/w/api.php"
+WIKIMEDIA_STATIC_VIDEO_URLS = (
+    "https://upload.wikimedia.org/wikipedia/commons/8/8b/Naga_Wrestling_NAGALAND_INDIA_%28video-converter.com%29.webm",
+    "https://upload.wikimedia.org/wikipedia/commons/5/57/Tagin_Tribe_ARUNACHAL_PRADESH_INDIA_%28video-converter.com%29.webm",
+    "https://upload.wikimedia.org/wikipedia/commons/0/00/Video_of_trees.webm",
+    "https://upload.wikimedia.org/wikipedia/commons/c/c4/Short_video_of_native_cock_and_hens.webm",
+    "https://upload.wikimedia.org/wikipedia/commons/2/2d/Video_of_the_Activities_in_Oshodi%2C_Lagos%2C_Nigeria.webm",
+    "https://upload.wikimedia.org/wikipedia/commons/7/78/Video_of_A_Pedicurist.webm",
+    "https://upload.wikimedia.org/wikipedia/commons/6/61/Welsh_Government_video_-_Apprenticeships_-_Saima%2C_2016.webm",
+    "https://upload.wikimedia.org/wikipedia/commons/9/98/Video-padre.webm",
+    "https://upload.wikimedia.org/wikipedia/commons/7/79/Video_of_man_kayaking_at_Regattastrecke_Oberschlei%C3%9Fheim_in_Germany.webm",
+    "https://upload.wikimedia.org/wikipedia/commons/a/aa/Situation_Video_original_Author_Ladislav_Kopunec_Univerzon_05_09_2012_Nature_Situation_Law_-_Czech_Republic_Natura.webm",
+    "https://upload.wikimedia.org/wikipedia/commons/9/92/Natura_Flora_Nature_Video_original_Author_Ladislav_Kopunec_Univerzon_Art_Law_-_Czech_Republic_785632.webm",
+    "https://upload.wikimedia.org/wikipedia/commons/7/7d/Expanding_Llennyrch_Nature_Reserve.webm",
+    "https://upload.wikimedia.org/wikipedia/commons/c/cf/SAVE_NATURE%21_-_stop_motion_video.webm",
+    "https://upload.wikimedia.org/wikipedia/commons/1/18/Storforsen_video_3.webm",
+)
 
 MAX_IMAGES = 24
 MAX_PER_KEYWORD = 5
@@ -190,6 +206,12 @@ class VideoDownloader:
                 seen_urls.add(clip["url"])
                 if not remaining:
                     break
+
+        for index, url in zip(remaining, WIKIMEDIA_STATIC_VIDEO_URLS):
+            if url in seen_urls:
+                continue
+            clips[index] = {"id": f"commons_static_{index}", "url": url}
+            seen_urls.add(url)
 
         return clips
 
