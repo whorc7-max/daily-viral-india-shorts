@@ -7,6 +7,7 @@ import edge_tts
 
 
 VOICE_NAME = os.environ.get("TTS_VOICE", "hi-IN-MadhurNeural")
+VOICE_RATE = os.environ.get("TTS_RATE", "-20%")
 
 
 class VoiceGenerator:
@@ -36,5 +37,5 @@ class VoiceGenerator:
         return float(result.stdout.strip())
 
     async def _generate(self, text: str, output_path: str):
-        communicate = edge_tts.Communicate(text, VOICE_NAME)
+        communicate = edge_tts.Communicate(text, VOICE_NAME, rate=VOICE_RATE)
         await communicate.save(output_path)
