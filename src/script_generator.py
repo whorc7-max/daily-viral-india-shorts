@@ -107,7 +107,7 @@ Return ONLY valid JSON with these fields:
 title, description, tags, voiceover_script, visual_keywords, visual_scenes, source_urls, duration_seconds
 
 Rules:
-- Write natural Hindi in Devanagari, approximately 200-270 words at normal speaking speed so the voiceover stays near 120-180 seconds.
+- Write natural Hindi in Devanagari, approximately 220-300 words at normal speaking speed so the voiceover stays near 120-180 seconds.
 - Make the script natural for a clear Hindi voiceover and readable captions.
 - Hook viewers in the first sentence and keep sentences short for readable captions.
 - Choose one topic only and add meaningful original commentary.
