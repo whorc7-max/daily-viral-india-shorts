@@ -133,7 +133,7 @@ class VideoDownloader:
                         "format": "json",
                         "origin": "*",
                         "generator": "search",
-                        "gsrsearch": f"{query} filetype:video",
+                        "gsrsearch": query,
                         "gsrnamespace": 6,
                         "gsrlimit": 10,
                         "prop": "imageinfo",
@@ -171,7 +171,15 @@ class VideoDownloader:
                     break
 
         remaining = [index for index, clip in enumerate(clips) if clip is None]
-        for query in ("India", "people", "news", "technology", "business", "nature"):
+        for query in (
+            "India video",
+            "people video",
+            "sports video",
+            "technology video",
+            "business video",
+            "nature video",
+            "video",
+        ):
             if not remaining:
                 break
             for clip in candidates(query):
