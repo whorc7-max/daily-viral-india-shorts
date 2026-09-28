@@ -46,7 +46,8 @@ jobs:
         env:
           FIREBASE_REFRESH_TOKEN: ${{ secrets.FIREBASE_REFRESH_TOKEN }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
-          FIREBASE_COLLECTION: pexelsKeys
+          FIREBASE_DATABASE_ID: ai-studio-983e8415-47eb-4f52-a589-ad65f677eec2
+          FIREBASE_COLLECTION: pexels_keys
           KEY_OUTPUT_PREFIX: PEXELS
         run: python scripts/fetch_gemini_keys.py >> "$GITHUB_ENV"
 
