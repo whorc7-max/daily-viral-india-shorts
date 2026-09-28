@@ -45,6 +45,11 @@ def _fallback_content(trends: list[str]) -> dict:
         "दर्शकों के लिए सबसे सही तरीका यही है कि वे जल्दबाजी में निष्कर्ष न निकालें और खबर को जिम्मेदारी से साझा करें।",
         "हम इस विषय पर नजर बनाए रखेंगे और पुष्टि होने वाली महत्वपूर्ण जानकारी आपको सरल भाषा में बताते रहेंगे।",
         "आपके हिसाब से इस पूरे मामले का सबसे बड़ा असर किस क्षेत्र पर पड़ेगा, अपनी राय जरूर बताइए।",
+        "इस विषय को समझने के लिए केवल एक वायरल पोस्ट पर निर्भर रहने के बजाय अलग-अलग विश्वसनीय स्रोतों की तुलना करना बेहतर रहेगा।",
+        "अगर आने वाले दिनों में कोई नया आधिकारिक अपडेट आता है, तो उससे मौजूदा तस्वीर में बड़ा बदलाव भी हो सकता है।",
+        "यही वजह है कि इस कहानी को लगातार अपडेट होने वाली खबर के रूप में देखना चाहिए, अंतिम निष्कर्ष के रूप में नहीं।",
+        "हमारी कोशिश रहेगी कि आपको तेज खबर के साथ उसका संदर्भ, संभावित असर और जरूरी सावधानी भी समझाई जाए।",
+        "वीडियो पसंद आए तो इसे साझा करें और ऐसे तथ्य आधारित अपडेट के लिए चैनल को फॉलो करना न भूलें।",
     ]
     keywords = ["India news", "breaking news", "digital news", "people discussion"]
     return {
@@ -102,7 +107,7 @@ Return ONLY valid JSON with these fields:
 title, description, tags, voiceover_script, visual_keywords, visual_scenes, source_urls, duration_seconds
 
 Rules:
-- Write natural Hindi in Devanagari, approximately 150-210 words so the voiceover stays near 120-180 seconds.
+- Write natural Hindi in Devanagari, approximately 200-270 words at normal speaking speed so the voiceover stays near 120-180 seconds.
 - Make the script natural for a clear Hindi voiceover and readable captions.
 - Hook viewers in the first sentence and keep sentences short for readable captions.
 - Choose one topic only and add meaningful original commentary.
