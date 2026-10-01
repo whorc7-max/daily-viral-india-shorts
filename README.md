@@ -9,15 +9,17 @@ Each run:
 3. Creates an ordered visual scene plan matching the narration beats.
 4. Downloads topic-matched licensed images per scene from Pexels/Openverse.
 5. Generates a natural Hindi voiceover with Edge TTS.
-6. Selects CC0 background music from Openverse and mixes it below the voice.
-7. Renders a 45-60 second, 9:16 video with synchronized Hindi captions and changing visuals.
-8. Uploads the MP4 to YouTube using the official YouTube Data API OAuth flow.
+6. Selects topic-matched CC0 background music from Openverse and mixes it below the voice.
+7. Adds CC0 ambience matched to each visual scene, with an offline-generated sound bed if no licensed clip is available.
+8. Renders a 9:16 video with synchronized Hindi captions, changing visuals, continuous music, and scene-changing ambience.
+9. Uploads the MP4 to YouTube using the official YouTube Data API OAuth flow.
 
 Reliability protections:
 
 - Gemini failures fall back to a safe trend-based Hindi script.
 - Pexels and Openverse failures fall back per scene, with generated backgrounds in the editor.
 - Missing CC0 music falls back to generated ambient audio.
+- Missing CC0 scene sounds fall back to generated ambience tailored to the scene category.
 - Network downloads and Hindi voice generation retry automatically.
 - A credential health check reports when YouTube authorization needs one-time reauthorization.
 - A monthly keepalive commit prevents GitHub's inactivity suspension from stopping schedules.
