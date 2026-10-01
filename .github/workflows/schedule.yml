@@ -76,6 +76,7 @@ jobs:
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
           TTS_VOICE: ${{ vars.TTS_VOICE || 'hi-IN-MadhurNeural' }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          LICENSED_MUSIC_CATALOG_JSON: ${{ secrets.LICENSED_MUSIC_CATALOG_JSON }}
           YT_PRIVACY_STATUS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.privacy_status || vars.YT_PRIVACY_STATUS || 'public' }}
         run: |
           python main.py
@@ -85,6 +86,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: final-short-${{ github.run_number }}
-          path: final_short.mp4
+          path: |
+            final_short.mp4
+            music_source.json
           if-no-files-found: ignore
           retention-days: 14

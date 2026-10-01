@@ -47,15 +47,19 @@ def main():
         print(f"  Voice duration: {voice_duration:.1f}s")
         temp_files.append(voice_path)
 
-        print("\n[3/8] Downloading topic-matched royalty-free music...")
+        print("\n[3/8] Matching the topic to authorized music or a free CC0 track...")
         music_path = MusicProvider().download(
             keywords=content["visual_keywords"],
             output_dir=workdir,
+            topic=content.get("title", ""),
         )
         if music_path:
             temp_files.append(music_path)
+            music_manifest = os.path.join(workdir, "music_source.json")
+            if os.path.isfile(music_manifest):
+                shutil.copy2(music_manifest, os.path.join(os.getcwd(), "music_source.json"))
         else:
-            print("  Music unavailable; continuing with voice only")
+            print("  No licensed track found; continuing without background music")
 
         print("\n[4/8] Preparing a scene-matched background sound for each beat...")
         scene_audio_paths = SoundDesigner().download_scene_sounds(
@@ -117,7 +121,7 @@ def main():
             visibility=os.environ.get("YT_PRIVACY_STATUS") or "public",
         )
 
-        print("\n[8/8] Done! Voice, background music, and scene ambience Short uploaded successfully.")
+        print("\n[8/8] Done! Short uploaded with voice, available licensed music, and scene ambience.")
 
     except Exception as e:
         print(f"\nError: {e}", file=sys.stderr)

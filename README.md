@@ -9,7 +9,7 @@ Each run:
 3. Creates an ordered visual scene plan matching the narration beats.
 4. Downloads topic-matched licensed images per scene from Pexels/Openverse.
 5. Generates a natural Hindi voiceover with Edge TTS.
-6. Selects topic-matched CC0 background music from Openverse and mixes it below the voice.
+6. First checks an optional private catalog of rights-holder-authorized tracks and chooses one by topic tags. If no authorized track matches, searches Openverse for a free CC0 track matched to the topic mood. The selected track's title, source, and rights status are saved as `music_source.json`.
 7. Adds CC0 ambience matched to each visual scene, with an offline-generated sound bed if no licensed clip is available.
 8. Renders a 9:16 video with changing visuals, Hindi narration, continuous music, and scene-changing ambience, without spoken-word subtitles.
 9. Uploads the MP4 to YouTube using the official YouTube Data API OAuth flow.
@@ -18,7 +18,8 @@ Reliability protections:
 
 - Gemini failures fall back to a safe trend-based Hindi script.
 - Pexels and Openverse failures fall back per scene, with generated backgrounds in the editor.
-- Missing CC0 music falls back to generated ambient audio.
+- If no suitable CC0 music is available, the Short renders without background music rather than inserting an unrelated tone or unlicensed song.
+- Only direct HTTPS audio-file URLs from `LICENSED_MUSIC_CATALOG_JSON` are accepted for authorized tracks. Y2mate and other downloader-page URLs are not used; if a catalog track cannot be fetched, the pipeline falls back to CC0 music.
 - Missing CC0 scene sounds fall back to generated ambience tailored to the scene category.
 - Network downloads and Hindi voice generation retry automatically.
 - A credential health check reports when YouTube authorization needs one-time reauthorization.
@@ -37,6 +38,17 @@ Add these under **Settings -> Secrets and variables -> Actions**:
 - `YT_CLIENT_SECRET`: Google Cloud OAuth desktop-app client secret.
 - `YT_REFRESH_TOKEN`: YouTube OAuth refresh token for the channel.
 - `PEXELS_API_KEY`: optional free Pexels key for stock images. If omitted, the workflow uses free Openverse CC0 images.
+- `LICENSED_MUSIC_CATALOG_JSON`: optional GitHub Actions Secret with direct audio URLs that you are authorized to use in YouTube videos. Add only tracks with rights-holder permission covering video use and upload; the pipeline never prints the URL or stores it in `music_source.json`.
+
+Example value for `LICENSED_MUSIC_CATALOG_JSON`:
+
+```json
+{"tracks":[{"title":"Licensed rain song","direct_url":"https://authorized-host.example/audio/rain-song.mp3","tags":["rain","monsoon","romantic"],"rights_holder":"Rights-holder name","authorized_for_youtube":true}]}
+```
+
+Use a direct HTTPS audio download URL from the authorized rights-holder/source, not a YouTube page or a downloader site. `tags` are matched against the Hindi Short's topic/title and visual keywords. Keep the permission document privately; do not commit it or the song file to this public repository.
+
+Hindi setup steps are in `LICENSED-MUSIC-SETUP-HI.md`.
 
 Voice uses the free `hi-IN-MadhurNeural` Edge TTS voice by default. Set the optional `TTS_VOICE` repository variable if you prefer another Edge voice.
 
@@ -57,6 +69,8 @@ Step-by-step Hindi instructions are in `CONTROL-CENTER-PAT-HINDI.md`.
 
 - Do not commit API keys, OAuth tokens, or passwords.
 - Use only original commentary and properly licensed stock images.
+- The automation does not copy songs from trending videos. Commercial songs such as "Tip Tip Barsa Pani" are used only if you provide an authorized direct audio source and the appropriate rights-holder permission; otherwise the pipeline uses CC0 mood-matched music.
+- CC0 music search uses Openverse and requires no paid music API key. Availability and mood relevance depend on its catalog; `music_source.json` is included with the rendered-video artifact when a track is found.
 - Review YouTube's policies for repetitive or AI-assisted content before enabling public uploads.
 - GitHub Actions and API providers have quotas and rate limits.
 - No automation can bypass provider quotas or revoked credentials. If Google revokes the YouTube OAuth grant,
