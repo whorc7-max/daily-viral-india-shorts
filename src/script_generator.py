@@ -199,7 +199,7 @@ class ScriptGenerator:
                 "lead": (
                     f"[YouTube {candidate['category']}] {title} | {channel}, "
                     f"{views:,} views in {age_minutes} min "
-                    f"(~{views_per_hour:,} views/hour) | {url}"
+                    f"(~{views_per_hour:,} average views/hour since upload) | {url}"
                 ),
             })
 
@@ -238,7 +238,7 @@ class ScriptGenerator:
     def generate(self) -> dict:
         trends = self._trends()
         trend_source_type = (
-            "YouTube videos published in the previous two hours, ranked by views per hour"
+            "YouTube videos published in the previous two hours, ranked by average views per hour since upload"
             if any("youtube.com/watch" in url for url in self.trend_source_urls)
             else "Google Trends fallback"
         )
@@ -258,7 +258,7 @@ Rules:
 - Make the script natural for a clear Hindi voiceover; narration is not displayed as on-screen text.
 - Hook viewers in the first sentence and keep sentences short for visual pacing.
 - Choose from funny/comedy, emotional/heart-touching, amazing/surprising, viral moments, interesting incidents, sports, gaming, movies/entertainment, music trends, celebrity/public-interest news, or memes/internet trends.
-- When YouTube candidates are supplied, choose one topic from those candidates and prioritize the highest views-per-hour signal; call it "viral" only when the available evidence supports that description.
+- When YouTube candidates are supplied, choose one topic from those candidates and prioritize the highest average views-per-hour-since-upload signal; call it "viral" only when the available evidence supports that description.
 - Treat views and view velocity as a discovery signal, not proof that a video's claims are true; add original commentary and do not copy its script, audio, or footage.
 - Choose one topic only and add meaningful original commentary.
 - Separate confirmed facts from rumours; avoid defamation, unsafe advice, and political claims without reliable sourcing.
