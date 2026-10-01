@@ -11,7 +11,7 @@ Each run:
 5. Generates a natural Hindi voiceover with Edge TTS.
 6. Selects topic-matched CC0 background music from Openverse and mixes it below the voice.
 7. Adds CC0 ambience matched to each visual scene, with an offline-generated sound bed if no licensed clip is available.
-8. Renders a 9:16 video with synchronized Hindi captions, changing visuals, continuous music, and scene-changing ambience.
+8. Renders a 9:16 video with changing visuals, Hindi narration, continuous music, and scene-changing ambience, without spoken-word subtitles.
 9. Uploads the MP4 to YouTube using the official YouTube Data API OAuth flow.
 
 Reliability protections:
@@ -43,6 +43,14 @@ Optional repository variables:
 
 - `GEMINI_MODEL`: defaults to `gemini-2.5-flash`.
 - `YT_PRIVACY_STATUS`: defaults to `public`; use `unlisted` for testing.
+
+Manual runs can choose `public`, `unlisted`, or `private` in the workflow input. Scheduled runs use `YT_PRIVACY_STATUS`, defaulting to `public`.
+
+## AI Studio Control Center GitHub access
+
+The scheduled workflow can run without a personal access token. The AI Studio Control Center needs its own fine-grained GitHub token to start a manual run. For this repository, grant the token **Actions: Read and write** to dispatch workflows and **Secrets: Read and write** to update Actions secrets. Limit repository access to `daily-viral-india-shorts`. Actions read-only is not enough to dispatch a workflow; changing this workflow's `permissions` does not upgrade the app token. Never paste the token into chat or commit it.
+
+Step-by-step Hindi instructions are in `CONTROL-CENTER-PAT-HINDI.md`.
 
 ## Important
 
