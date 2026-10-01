@@ -75,6 +75,7 @@ jobs:
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
           TTS_VOICE: ${{ vars.TTS_VOICE || 'hi-IN-MadhurNeural' }}
+          TTS_RATE: ${{ vars.TTS_RATE || '+10%' }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           LICENSED_MUSIC_CATALOG_JSON: ${{ secrets.LICENSED_MUSIC_CATALOG_JSON }}
           YT_PRIVACY_STATUS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.privacy_status || vars.YT_PRIVACY_STATUS || 'public' }}
