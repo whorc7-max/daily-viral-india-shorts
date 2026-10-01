@@ -2,11 +2,17 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-from src.silent_editor import _build_audio_filter
+from src.silent_editor import _brand_overlay, _build_audio_filter
 from src.sound_designer import SoundDesigner
 
 
 class SceneAudioTests(unittest.TestCase):
+    def test_video_overlay_keeps_branding_without_spoken_text(self):
+        overlay = _brand_overlay(0, 1)
+
+        self.assertGreater(overlay.getpixel((540, 110))[3], 0)
+        self.assertEqual(overlay.getpixel((540, 1450))[3], 0)
+
     def test_scene_profile_changes_for_scene_topics(self):
         profile, _query, _filter = SoundDesigner._scene_profile("Cricket stadium match")
         self.assertEqual(profile, "sports")
