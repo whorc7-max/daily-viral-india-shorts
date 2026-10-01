@@ -66,6 +66,7 @@ def _fallback_content(trends: list[str]) -> dict:
         "नई पुष्टि सामने आए तो इस विषय की समझ भी बदल सकती है, इसलिए अपडेट पर नजर रखना बेहतर है।",
         "आपको इस trend का सबसे दिलचस्प पहलू क्या लगा, अपनी राय बताइए।",
         "ऐसे ही तेजी से उभरते विषयों पर साफ और जिम्मेदार हिंदी updates के लिए जुड़े रहिए।",
+        "किसी भी चर्चा को समझते समय उपलब्ध तथ्यों के साथ यह भी देखना चाहिए कि अभी कौन-सी बातें अज्ञात हैं।",
     ]
     keywords = ["India trending topic", "viral moment", "popular culture", "people reaction"]
     return {
@@ -79,7 +80,7 @@ def _fallback_content(trends: list[str]) -> dict:
         "visual_keywords": keywords,
         "visual_scenes": [
             {
-                "search_query": keywords[index],
+                "search_query": keywords[index % len(keywords)],
                 "image_prompt": f"Editorial vertical visual illustrating: {sentence}",
                 "voiceover_text": sentence,
             }
@@ -254,7 +255,7 @@ Return ONLY valid JSON with these fields:
 title, description, tags, voiceover_script, visual_keywords, visual_scenes, source_urls, duration_seconds
 
 Rules:
-- Write natural Hindi in Devanagari, approximately 220-300 words at normal speaking speed so the voiceover stays near 120-180 seconds.
+- Write natural Hindi in Devanagari, approximately 240-330 words at a slightly brisk speaking pace (Edge TTS rate +10%) so the voiceover stays near 120-180 seconds.
 - Make the script natural for a clear Hindi voiceover; narration is not displayed as on-screen text.
 - Hook viewers in the first sentence and keep sentences short for visual pacing.
 - Choose from funny/comedy, emotional/heart-touching, amazing/surprising, viral moments, interesting incidents, sports, gaming, movies/entertainment, music trends, celebrity/public-interest news, or memes/internet trends.
