@@ -16,11 +16,12 @@ class MusicProvider:
             subprocess.run(
                 [
                     "ffmpeg", "-y",
+                    "-f", "lavfi", "-i", "sine=frequency=146.83:duration=120",
                     "-f", "lavfi", "-i", "sine=frequency=196:duration=120",
                     "-f", "lavfi", "-i", "sine=frequency=293.66:duration=120",
                     "-filter_complex",
-                    "[0:a]volume=0.035[a0];[1:a]volume=0.02[a1];"
-                    "[a0][a1]amix=inputs=2:duration=longest,lowpass=f=900,"
+                    "[0:a]volume=0.28[a0];[1:a]volume=0.18[a1];[2:a]volume=0.10[a2];"
+                    "[a0][a1][a2]amix=inputs=3:duration=longest,lowpass=f=900,"
                     "afade=t=in:st=0:d=2,afade=t=out:st=110:d=10",
                     "-q:a", "6", output_path,
                 ],
