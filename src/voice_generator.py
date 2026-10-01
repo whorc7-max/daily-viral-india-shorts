@@ -7,7 +7,7 @@ import edge_tts
 
 
 VOICE_NAME = os.environ.get("TTS_VOICE", "hi-IN-MadhurNeural")
-VOICE_RATE = os.environ.get("TTS_RATE", "+0%")
+VOICE_RATE = os.environ.get("TTS_RATE", "+10%")
 
 
 class VoiceGenerator:
