@@ -33,12 +33,12 @@ def main():
         print("YouTube Shorts Automation Pipeline")
         print("=" * 50)
 
-        print("\n[1/7] Finding a current India trend and writing one Hindi Short...")
+        print("\n[1/8] Finding a current India trend and writing one Hindi Short...")
         content = ScriptGenerator().generate()
         print(f"  Title: {content['title']}")
         print(f"  Scenes: {len(content['visual_scenes'])}")
 
-        print("\n[2/7] Generating Hindi voiceover...")
+        print("\n[2/8] Generating Hindi voiceover...")
         voice_path = os.path.join(workdir, "voiceover.mp3")
         voice_duration = VoiceGenerator().generate(
             text=content["voiceover_script"],
@@ -47,7 +47,7 @@ def main():
         print(f"  Voice duration: {voice_duration:.1f}s")
         temp_files.append(voice_path)
 
-        print("\n[3/7] Downloading topic-matched royalty-free music...")
+        print("\n[3/8] Downloading topic-matched royalty-free music...")
         music_path = MusicProvider().download(
             keywords=content["visual_keywords"],
             output_dir=workdir,
