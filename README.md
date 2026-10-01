@@ -4,7 +4,7 @@ Free GitHub Actions automation for two original Hindi YouTube Shorts per day.
 
 Each run:
 
-1. Searches India YouTube videos published in the previous two hours across comedy/memes, emotional stories, entertainment, sports, gaming, movies, music, and public-interest news; ranks candidates by views per hour.
+1. Searches India YouTube videos published in the previous two hours across funny/comedy, emotional stories, surprising moments, viral incidents, sports, gaming, movies, music, celebrity/news, and meme trends; ranks candidates with at least 1,000 views by average views per hour since upload. If no candidate qualifies, it falls back to Google Trends.
 2. Uses Gemini to write one original Hindi Short.
 3. Creates an ordered visual scene plan matching the narration beats.
 4. Downloads topic-matched licensed images per scene from Pexels/Openverse.
