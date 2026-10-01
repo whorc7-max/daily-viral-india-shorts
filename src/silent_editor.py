@@ -4,22 +4,10 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageOps
 
 
 TARGET_W, TARGET_H = 1080, 1920
-FONT_DIR = "/usr/share/fonts/truetype/noto"
-
-
-def _font(name: str, size: int):
-    candidates = [
-        os.path.join(FONT_DIR, name),
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-    ]
-    for path in candidates:
-        if os.path.exists(path):
-            return ImageFont.truetype(path, size)
-    return ImageFont.load_default()
 
 
 def _phrases(script: str, scene_specs: list[dict] | None = None) -> list[str]:
@@ -67,26 +55,10 @@ def _fit_image(path: str | None, index: int) -> Image.Image:
         return _background(index)
     try:
         image = Image.open(path).convert("RGB")
-        image = ImageOps.fit(image, (TARGET_W, TARGET_H), method=Image.Resampling.LANCZOS)
-        overlay = Image.new("RGBA", image.size, (0, 0, 0, 95))
-        return Image.alpha_composite(image.convert("RGBA"), overlay).convert("RGB")
+        return ImageOps.fit(image, (TARGET_W, TARGET_H), method=Image.Resampling.LANCZOS)
     except Exception as exc:
         print(f"  Could not use image {path}: {exc}")
         return _background(index)
-
-
-def _brand_overlay(index: int, scene_count: int) -> Image.Image:
-    overlay = Image.new("RGBA", (TARGET_W, TARGET_H), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(overlay, "RGBA")
-    label_font = _font("NotoSansDevanagari-Bold.ttf", 34)
-
-    draw.rounded_rectangle((55, 70, TARGET_W - 55, 150), radius=28, fill=(0, 0, 0, 130))
-    draw.text((85, 91), "DAILY VIRAL INDIA", font=label_font, fill=(255, 255, 255, 245))
-
-    progress = int((index + 1) / max(1, scene_count) * (TARGET_W - 110))
-    draw.rounded_rectangle((55, 1835, TARGET_W - 55, 1850), radius=7, fill=(255, 255, 255, 70))
-    draw.rounded_rectangle((55, 1835, 55 + progress, 1850), radius=7, fill=(255, 213, 79, 255))
-    return overlay
 
 
 def _build_audio_filter(
@@ -151,10 +123,6 @@ class SilentVideoEditor:
         scene_paths = []
 
         for index, duration in enumerate(durations):
-            overlay = _brand_overlay(index, len(phrases))
-            overlay_path = os.path.join(scenes_dir, f"overlay_{index:03d}.png")
-            overlay.save(overlay_path, format="PNG", optimize=True)
-
             clip_path = clips[index] if index < len(clips) else None
             if clip_path and os.path.isfile(clip_path):
                 background_path = clip_path
@@ -174,13 +142,10 @@ class SilentVideoEditor:
             subprocess.run(
                 [
                     "ffmpeg", "-y", *background_input,
-                    "-loop", "1", "-i", overlay_path,
                     "-filter_complex",
                     (
                         "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,"
-                        "crop=1080:1920,setsar=1,fps=30[bg];"
-                        "[1:v]format=rgba[overlay];"
-                        "[bg][overlay]overlay=0:0:format=auto,format=yuv420p[v]"
+                        "crop=1080:1920,setsar=1,fps=30,format=yuv420p[v]"
                     ),
                     "-map", "[v]", "-t", f"{duration:.3f}", "-an",
                     "-r", "30", "-c:v", "libx264", "-pix_fmt", "yuv420p",
