@@ -58,7 +58,7 @@ class YouTubeTrendTests(unittest.TestCase):
 
         self.assertEqual(len(candidates), 2)
         self.assertEqual(candidates[0]["url"], "https://www.youtube.com/watch?v=newer")
-        self.assertIn("12,000 views/hour", candidates[0]["lead"])
+        self.assertIn("12,000 average views/hour since upload", candidates[0]["lead"])
         self.assertEqual(get.call_count, len(YOUTUBE_CATEGORIES) + 1)
         self.assertEqual(get.call_args_list[0].kwargs["params"]["regionCode"], "IN")
         self.assertEqual(get.call_args_list[0].kwargs["params"]["order"], "viewCount")
