@@ -73,14 +73,39 @@ class YouTubeUploader:
             "https://www.googleapis.com/upload/youtube/v3/videos"
             "?part=snippet,status&uploadType=resumable"
         )
-        resp = requests.post(init_url, headers=headers, json=body, timeout=30)
-        if not resp.ok:
-            print(
-                f"YouTube upload initialization failed ({resp.status_code}): "
-                f"{resp.text[:1000]}"
-            )
-        resp.raise_for_status()
-        upload_url = resp.headers["Location"]
+        retryable_statuses = {429, 500, 502, 503, 504}
+        max_attempts = 5
+        for attempt in range(1, max_attempts + 1):
+            try:
+                resp = requests.post(init_url, headers=headers, json=body, timeout=30)
+            except requests.RequestException as exc:
+                if attempt == max_attempts:
+                    raise RuntimeError(
+                        f"YouTube upload initialization failed after {max_attempts} attempts due to a network error."
+                    ) from exc
+                delay = min(2 ** attempt, 30)
+                print(f"Upload initialization network error; retrying in {delay}s ({attempt}/{max_attempts})")
+                time.sleep(delay)
+                continue
+
+            if resp.ok:
+                break
+            if resp.status_code not in retryable_statuses or attempt == max_attempts:
+                raise RuntimeError(
+                    f"YouTube upload initialization failed (HTTP {resp.status_code}) after {attempt} attempts."
+                )
+
+            try:
+                retry_after = float(resp.headers.get("Retry-After", ""))
+            except (TypeError, ValueError):
+                retry_after = 0
+            delay = min(max(retry_after, 2 ** attempt), 30)
+            print(f"Upload initialization failed (HTTP {resp.status_code}); retrying in {delay}s ({attempt}/{max_attempts})")
+            time.sleep(delay)
+
+        upload_url = resp.headers.get("Location")
+        if not upload_url:
+            raise RuntimeError("YouTube did not return a resumable upload URL.")
 
         print("Uploading video file...")
         file_size = os.path.getsize(video_path)
