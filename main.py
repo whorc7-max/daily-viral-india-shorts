@@ -81,7 +81,7 @@ def main():
         )
         print(f"  Using {fallback_images} image fallback(s) where video was unavailable")
 
-        print("\n[6/8] Rendering a captioned video with voice, music, and scene sound...")
+        print("\n[6/8] Rendering the video with voice, music, and scene ambience...")
         output_path = os.path.join(workdir, "final_short.mp4")
         editor = SilentVideoEditor(workdir)
         editor.compose(
