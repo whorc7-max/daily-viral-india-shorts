@@ -4,7 +4,7 @@ Free GitHub Actions automation for two original Hindi YouTube Shorts per day.
 
 Each run:
 
-1. Reads current India trend leads from Google Trends.
+1. Searches India YouTube videos published in the previous two hours across comedy/memes, emotional stories, entertainment, sports, gaming, movies, music, and public-interest news; ranks candidates by views per hour.
 2. Uses Gemini to write one original Hindi Short.
 3. Creates an ordered visual scene plan matching the narration beats.
 4. Downloads topic-matched licensed images per scene from Pexels/Openverse.
@@ -24,13 +24,14 @@ Reliability protections:
 - A credential health check reports when YouTube authorization needs one-time reauthorization.
 - A monthly keepalive commit prevents GitHub's inactivity suspension from stopping schedules.
 
-The schedule runs twice daily at 08:44 and 16:47 UTC. Change `.github/workflows/schedule.yml` if you want different times.
+The schedule runs twice daily at 08:44 and 16:47 UTC. The YouTube search window is the two hours before each run; this does not schedule a run every two hours. Change `.github/workflows/schedule.yml` if you want different times or upload frequency.
 
 ## GitHub Secrets
 
 Add these under **Settings -> Secrets and variables -> Actions**:
 
 - `GEMINI_API_KEY`: Google AI Studio key used for script generation; optional because a safe fallback exists.
+- `YOUTUBE_API_KEY`: optional Google API key with YouTube Data API v3 enabled. This is needed to search recent YouTube video topics; if unset or no qualifying video is found, the workflow falls back to Google Trends.
 - `FIREBASE_REFRESH_TOKEN`: optional Firebase Auth refresh token for loading the current key rotation set from the private AI Studio vault.
 - `YT_CLIENT_ID`: Google Cloud OAuth desktop-app client ID.
 - `YT_CLIENT_SECRET`: Google Cloud OAuth desktop-app client secret.
