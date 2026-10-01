@@ -8,6 +8,7 @@ from src.script_generator import ScriptGenerator
 from src.downloader import VideoDownloader
 from src.music_provider import MusicProvider
 from src.silent_editor import SilentVideoEditor
+from src.sound_designer import SoundDesigner
 from src.uploader import YouTubeUploader
 from src.voice_generator import VoiceGenerator
 
@@ -56,7 +57,14 @@ def main():
         else:
             print("  Music unavailable; continuing with voice only")
 
-        print("\n[4/7] Downloading topic-matched Pexels video clips first...")
+        print("\n[4/8] Preparing a scene-matched background sound for each beat...")
+        scene_audio_paths = SoundDesigner().download_scene_sounds(
+            content.get("visual_scenes", []), workdir
+        )
+        available_ambience = sum(bool(path) for path in scene_audio_paths)
+        print(f"  Prepared {available_ambience}/{len(scene_audio_paths)} scene ambience bed(s)")
+
+        print("\n[5/8] Downloading topic-matched Pexels video clips first...")
         downloader = VideoDownloader()
         video_paths, image_paths = downloader.download_all(
             content["visual_scenes"],
@@ -73,7 +81,7 @@ def main():
         )
         print(f"  Using {fallback_images} image fallback(s) where video was unavailable")
 
-        print("\n[5/7] Rendering a captioned video with voice and music...")
+        print("\n[6/8] Rendering a captioned video with voice, music, and scene sound...")
         output_path = os.path.join(workdir, "final_short.mp4")
         editor = SilentVideoEditor(workdir)
         editor.compose(
@@ -85,6 +93,7 @@ def main():
             music_path=music_path,
             clip_paths=video_paths,
             scene_specs=content["visual_scenes"],
+            scene_audio_paths=scene_audio_paths,
         )
         temp_files.append(output_path)
 
@@ -94,7 +103,7 @@ def main():
         shutil.copy2(output_path, preserved_output)
         print(f"  Video saved: {preserved_output}")
 
-        print("\n[6/7] Uploading to YouTube...")
+        print("\n[7/8] Uploading to YouTube...")
         uploader = YouTubeUploader()
         sources = content.get("source_urls", [])
         description = content["description"]
@@ -108,7 +117,7 @@ def main():
             visibility=os.environ.get("YT_PRIVACY_STATUS") or "public",
         )
 
-        print("\n[7/7] Done! Voice and caption Short uploaded successfully.")
+        print("\n[8/8] Done! Voice, background music, and scene ambience Short uploaded successfully.")
 
     except Exception as e:
         print(f"\nError: {e}", file=sys.stderr)
