@@ -11,7 +11,9 @@ Each run:
 5. Generates a natural Hindi voiceover with Edge TTS.
 6. First checks an optional private catalog of rights-holder-authorized tracks and chooses one by topic tags. If no authorized track matches, searches Openverse for a free CC0 track matched to the topic mood. The selected track's title, source, and rights status are saved as `music_source.json`.
 7. Adds CC0 ambience matched to each visual scene, with an offline-generated sound bed if no licensed clip is available.
-8. Renders a 9:16 video with changing visuals, Hindi narration, continuous music, and scene-changing ambience, without spoken-word subtitles.
+8. Renders a 9:16 video with changing visuals, Hindi narration, continuous music, and scene-changing ambience.
+   The renderer adds no text or graphic overlays, including channel branding, titles, captions,
+   subtitles, watermarks, or progress indicators.
 9. Uploads the MP4 to YouTube using the official YouTube Data API OAuth flow.
 
 Reliability protections:
