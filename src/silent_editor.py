@@ -125,6 +125,39 @@ def _draw_wrapped(draw, text, font, max_width):
     return lines
 
 
+def _build_audio_filter(
+    music_input_index: int | None,
+    scene_inputs: list[tuple[int, float, float]],
+) -> str:
+    filters = ["[1:a]volume=1.0[voice]"]
+    mix_labels = ["[voice]"]
+
+    if music_input_index is not None:
+        filters.append(f"[{music_input_index}:a]volume=0.18[music]")
+        mix_labels.append("[music]")
+
+    for index, (input_index, start, duration) in enumerate(scene_inputs):
+        fade = min(0.6, duration / 2)
+        fade_out_start = max(0, duration - fade)
+        delay_ms = max(0, round(start * 1000))
+        filters.append(
+            f"[{input_index}:a]atrim=duration={duration:.3f},asetpts=PTS-STARTPTS,"
+            f"afade=t=in:st=0:d={fade:.3f},"
+            f"afade=t=out:st={fade_out_start:.3f}:d={fade:.3f},"
+            f"volume=0.18,adelay=delays={delay_ms}:all=1[scene_{index}]"
+        )
+        mix_labels.append(f"[scene_{index}]")
+
+    if len(mix_labels) == 1:
+        filters.append("[voice]alimiter=limit=0.95[aout]")
+    else:
+        filters.append(
+            f"{''.join(mix_labels)}amix=inputs={len(mix_labels)}:duration=first:"
+            "dropout_transition=2:normalize=0,alimiter=limit=0.95[aout]"
+        )
+    return ";".join(filters)
+
+
 class SilentVideoEditor:
     def __init__(self, workdir: str | None = None):
         self.workdir = workdir or tempfile.mkdtemp(prefix="silent_short_")
@@ -139,6 +172,7 @@ class SilentVideoEditor:
         music_path: str | None = None,
         clip_paths: list[str | None] | None = None,
         scene_specs: list[dict] | None = None,
+        scene_audio_paths: list[str | None] | None = None,
     ) -> str:
         phrases = _phrases(script, scene_specs)
         print(f"  Rendering {len(phrases)} narration-aligned visual beat(s)")
@@ -217,16 +251,40 @@ class SilentVideoEditor:
             os.replace(video_only_path, output_path)
             return output_path
 
-        if music_path:
-            audio_args = [
-                "-i", voice_path,
-                "-stream_loop", "-1", "-i", music_path,
-                "-filter_complex",
-                "[2:a]volume=0.10[music];[1:a][music]amix=inputs=2:duration=first:dropout_transition=2[aout]",
+        audio_args = ["-i", voice_path]
+        music_input_index = None
+        next_audio_input = 2
+        if music_path and os.path.isfile(music_path):
+            music_input_index = next_audio_input
+            audio_args.extend(["-stream_loop", "-1", "-i", music_path])
+            next_audio_input += 1
+
+        scene_inputs = []
+        scene_start = 0.0
+        for index, duration in enumerate(durations):
+            sound_path = (
+                scene_audio_paths[index]
+                if scene_audio_paths and index < len(scene_audio_paths)
+                else None
+            )
+            if sound_path and os.path.isfile(sound_path):
+                audio_args.extend(["-stream_loop", "-1", "-i", sound_path])
+                scene_inputs.append((next_audio_input, scene_start, duration))
+                next_audio_input += 1
+            scene_start += duration
+
+        if music_input_index is not None or scene_inputs:
+            audio_args.extend([
+                "-filter_complex", _build_audio_filter(music_input_index, scene_inputs),
                 "-map", "0:v:0", "-map", "[aout]",
-            ]
+            ])
+            print(
+                f"  Mixing continuous music and {len(scene_inputs)} scene ambience bed(s)"
+                if music_input_index is not None
+                else f"  Mixing {len(scene_inputs)} scene ambience bed(s)"
+            )
         else:
-            audio_args = ["-i", voice_path, "-map", "0:v:0", "-map", "1:a:0"]
+            audio_args.extend(["-map", "0:v:0", "-map", "1:a:0"])
 
         subprocess.run(
             [
