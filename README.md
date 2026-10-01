@@ -8,7 +8,7 @@ Each run:
 2. Uses Gemini to write one original Hindi Short.
 3. Creates an ordered visual scene plan matching the narration beats.
 4. Downloads topic-matched licensed images per scene from Pexels/Openverse.
-5. Generates a natural Hindi voiceover with Edge TTS.
+5. Generates a natural Hindi voiceover with Edge TTS at a slightly faster default rate to fit the fuller script without materially lengthening the video.
 6. First checks an optional private catalog of rights-holder-authorized tracks and chooses one by topic tags. If no authorized track matches, searches Openverse for a free CC0 track matched to the topic mood. The selected track's title, source, and rights status are saved as `music_source.json`.
 7. Adds CC0 ambience matched to each visual scene, with an offline-generated sound bed if no licensed clip is available.
 8. Renders a 9:16 video with changing visuals, Hindi narration, continuous music, and scene-changing ambience.
@@ -52,11 +52,12 @@ Use a direct HTTPS audio download URL from the authorized rights-holder/source, 
 
 Hindi setup steps are in `LICENSED-MUSIC-SETUP-HI.md`.
 
-Voice uses the free `hi-IN-MadhurNeural` Edge TTS voice by default. Set the optional `TTS_VOICE` repository variable if you prefer another Edge voice.
+Voice uses the free `hi-IN-MadhurNeural` Edge TTS voice at `+10%` rate by default. The script target is slightly longer, with the faster narration keeping the render near its current duration. Set the optional `TTS_VOICE` or `TTS_RATE` repository variable if you prefer another voice or pace.
 
 Optional repository variables:
 
 - `GEMINI_MODEL`: defaults to `gemini-2.5-flash`.
+- `TTS_RATE`: defaults to `+10%`; use `+0%` for the normal rate.
 - `YT_PRIVACY_STATUS`: defaults to `public`; use `unlisted` for testing.
 
 Manual runs can choose `public`, `unlisted`, or `private` in the workflow input. Scheduled runs use `YT_PRIVACY_STATUS`, defaulting to `public`.

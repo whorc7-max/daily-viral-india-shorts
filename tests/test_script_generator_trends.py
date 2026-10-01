@@ -6,6 +6,7 @@ from src.script_generator import (
     TREND_PAGE_URL,
     YOUTUBE_CATEGORIES,
     ScriptGenerator,
+    _fallback_content,
 )
 
 
@@ -96,6 +97,16 @@ class YouTubeTrendTests(unittest.TestCase):
         self.assertEqual(trends, ["India trend"])
         self.assertEqual(self.generator.trend_source_urls, [TREND_PAGE_URL])
         self.assertEqual(get.call_count, 1)
+
+    def test_fallback_script_is_fuller_and_keeps_scene_words_aligned(self):
+        content = _fallback_content(["India trend"])
+        script = content["voiceover_script"]
+
+        self.assertGreaterEqual(len(script.split()), 240)
+        self.assertEqual(
+            " ".join(scene["voiceover_text"] for scene in content["visual_scenes"]),
+            script,
+        )
 
 
 if __name__ == "__main__":
