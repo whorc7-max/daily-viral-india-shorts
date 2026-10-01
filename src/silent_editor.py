@@ -75,54 +75,18 @@ def _fit_image(path: str | None, index: int) -> Image.Image:
         return _background(index)
 
 
-def _caption_overlay(phrase: str, index: int, scene_count: int) -> Image.Image:
+def _brand_overlay(index: int, scene_count: int) -> Image.Image:
     overlay = Image.new("RGBA", (TARGET_W, TARGET_H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay, "RGBA")
-    caption_font = _font("NotoSansDevanagari-Bold.ttf", 62)
     label_font = _font("NotoSansDevanagari-Bold.ttf", 34)
 
     draw.rounded_rectangle((55, 70, TARGET_W - 55, 150), radius=28, fill=(0, 0, 0, 130))
     draw.text((85, 91), "DAILY VIRAL INDIA", font=label_font, fill=(255, 255, 255, 245))
 
-    box_left, box_top, box_right, box_bottom = 55, 1240, TARGET_W - 55, 1765
-    draw.rounded_rectangle(
-        (box_left, box_top, box_right, box_bottom),
-        radius=38,
-        fill=(0, 0, 0, 175),
-        outline=(255, 255, 255, 120),
-        width=3,
-    )
-    lines = _draw_wrapped(draw, phrase, caption_font, box_right - box_left - 100)
-    line_height = 84
-    text_height = len(lines) * line_height
-    y = box_top + ((box_bottom - box_top - text_height) // 2)
-    for line in lines:
-        bbox = draw.textbbox((0, 0), line, font=caption_font)
-        x = (TARGET_W - (bbox[2] - bbox[0])) // 2
-        draw.text((x, y), line, font=caption_font, fill=(255, 255, 255, 255))
-        y += line_height
-
     progress = int((index + 1) / max(1, scene_count) * (TARGET_W - 110))
     draw.rounded_rectangle((55, 1835, TARGET_W - 55, 1850), radius=7, fill=(255, 255, 255, 70))
     draw.rounded_rectangle((55, 1835, 55 + progress, 1850), radius=7, fill=(255, 213, 79, 255))
     return overlay
-
-
-def _draw_wrapped(draw, text, font, max_width):
-    words = text.split()
-    lines = []
-    current = ""
-    for word in words:
-        candidate = f"{current} {word}".strip()
-        if draw.textbbox((0, 0), candidate, font=font)[2] <= max_width:
-            current = candidate
-        else:
-            if current:
-                lines.append(current)
-            current = word
-    if current:
-        lines.append(current)
-    return lines
 
 
 def _build_audio_filter(
@@ -186,9 +150,9 @@ class SilentVideoEditor:
         clips = clip_paths or []
         scene_paths = []
 
-        for index, (phrase, duration) in enumerate(zip(phrases, durations)):
-            overlay = _caption_overlay(phrase, index, len(phrases))
-            overlay_path = os.path.join(scenes_dir, f"caption_{index:03d}.png")
+        for index, duration in enumerate(durations):
+            overlay = _brand_overlay(index, len(phrases))
+            overlay_path = os.path.join(scenes_dir, f"overlay_{index:03d}.png")
             overlay.save(overlay_path, format="PNG", optimize=True)
 
             clip_path = clips[index] if index < len(clips) else None
@@ -215,8 +179,8 @@ class SilentVideoEditor:
                     (
                         "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,"
                         "crop=1080:1920,setsar=1,fps=30[bg];"
-                        "[1:v]format=rgba[caption];"
-                        "[bg][caption]overlay=0:0:format=auto,format=yuv420p[v]"
+                        "[1:v]format=rgba[overlay];"
+                        "[bg][overlay]overlay=0:0:format=auto,format=yuv420p[v]"
                     ),
                     "-map", "[v]", "-t", f"{duration:.3f}", "-an",
                     "-r", "30", "-c:v", "libx264", "-pix_fmt", "yuv420p",
