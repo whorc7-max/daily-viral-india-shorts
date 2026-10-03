@@ -8,7 +8,7 @@ Each run:
 2. Uses Gemini to write one original Hindi Short.
 3. Creates an ordered visual scene plan matching the narration beats.
 4. Downloads topic-matched licensed images per scene from Pexels/Openverse.
-5. Generates a natural Hindi voiceover with Edge TTS.
+5. Generates a Hindi voiceover with the configured TTS backend (Chatterbox, ElevenLabs, or Edge TTS).
 6. First checks an optional private catalog of rights-holder-authorized tracks and chooses one by topic tags. If no authorized track matches, searches Openverse for a free CC0 track matched to the topic mood. The selected track's title, source, and rights status are saved as `music_source.json`.
 7. Adds CC0 ambience matched to each visual scene, with an offline-generated sound bed if no licensed clip is available.
 8. Renders a 9:16 video with changing visuals, Hindi narration, continuous music, and scene-changing ambience.
@@ -41,6 +41,8 @@ Add these under **Settings -> Secrets and variables -> Actions**:
 - `YT_REFRESH_TOKEN`: YouTube OAuth refresh token for the channel.
 - `PEXELS_API_KEY`: optional free Pexels key for stock images. If omitted, the workflow uses free Openverse CC0 images.
 - `LICENSED_MUSIC_CATALOG_JSON`: optional GitHub Actions Secret with direct audio URLs that you are authorized to use in YouTube videos. Add only tracks with rights-holder permission covering video use and upload; the pipeline never prints the URL or stores it in `music_source.json`.
+- `ELEVENLABS_API_KEY`: optional. When set, the Hindi voiceover uses the configured ElevenLabs voice. Add it only after confirming your account/API plan can access that shared voice; API errors stop the run rather than silently using a different voice.
+- `TTS_REFERENCE_AUDIO_BASE64`: optional private voice recording encoded as Base64. The workflow decodes it into the runner's temporary directory and does not include it in artifacts.
 
 Example value for `LICENSED_MUSIC_CATALOG_JSON`:
 
@@ -52,12 +54,24 @@ Use a direct HTTPS audio download URL from the authorized rights-holder/source, 
 
 Hindi setup steps are in `LICENSED-MUSIC-SETUP-HI.md`.
 
-Voice uses the free `hi-IN-MadhurNeural` Edge TTS voice by default. Set the optional `TTS_VOICE` repository variable if you prefer another Edge voice.
+Voice uses Chatterbox with your reference audio when `TTS_REFERENCE_AUDIO_PATH` is available in `auto` mode; otherwise it uses ElevenLabs when configured, then Edge TTS. Never paste API keys into chat or commit them.
 
 Optional repository variables:
 
 - `GEMINI_MODEL`: defaults to `gemini-2.5-flash`.
+- `ELEVENLABS_VOICE_ID`: defaults to `2cdvnKJ5TZi631y5PN1s`.
+- `ELEVENLABS_MODEL`: defaults to `eleven_multilingual_v2`.
+- `TTS_VOICE`: Edge TTS fallback voice; defaults to `hi-IN-MadhurNeural`.
+- `TTS_BACKEND`: optional `chatterbox`, `elevenlabs`, or `edge`; defaults to `auto` (reference audio, then ElevenLabs key, then Edge TTS).
+- `TTS_REFERENCE_AUDIO_PATH`: optional path to a private reference-audio file available to the runner. Never place a voice recording in a public repository.
+- `CHATTERBOX_DEVICE`: optional `auto`, `cpu`, `cuda`, or `mps`; defaults to automatic selection.
 - `YT_PRIVACY_STATUS`: defaults to `public`; use `unlisted` for testing.
+
+### Use your own Hindi voice locally
+
+The optional Chatterbox Multilingual V3 backend supports zero-shot Hindi voice cloning from a reference recording and runs without a vendor API key. It uses the MIT-licensed `chatterbox-tts` package; generated speech is watermarked by the model. A reference clip of at least 10 seconds is recommended by the model provider. The workflow installs this larger dependency only when `TTS_BACKEND=chatterbox` or `TTS_REFERENCE_AUDIO_PATH` is set, and caches downloaded model weights.
+
+To use it in scheduled GitHub Actions without committing audio, set the repository variable `TTS_BACKEND` to `chatterbox` and create the Actions Secret `TTS_REFERENCE_AUDIO_BASE64` with the contents of `outputs/my-voice-actions-secret.txt`. This prepared payload is below GitHub's 48 KB secret limit. The workflow decodes it into the runner's temporary directory; the secret is not printed or included in artifacts. Alternatively, set `TTS_REFERENCE_AUDIO_PATH` to an audio file already available privately on the runner. Do not commit personal voice audio to a public repository. CPU inference can be slower than Edge TTS, and the first run downloads model weights. The original upload is not bundled with this code; the Actions runner cannot read files from this workspace.
 
 Manual runs can choose `public`, `unlisted`, or `private` in the workflow input. Scheduled runs use `YT_PRIVACY_STATUS`, defaulting to `public`.
 
