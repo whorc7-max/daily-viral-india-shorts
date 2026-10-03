@@ -38,11 +38,40 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg fonts-noto-core
+          sudo apt-get install -y -qq ffmpeg fonts-noto-core libgomp1
 
       - name: Install Python dependencies
         run: |
           python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Cache Chatterbox model weights
+        if: ${{ vars.TTS_BACKEND == 'chatterbox' || vars.TTS_REFERENCE_AUDIO_PATH != '' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface/hub
+          key: chatterbox-${{ runner.os }}-multilingual-v3
+
+      - name: Install local voice-cloning dependencies
+        if: ${{ vars.TTS_BACKEND == 'chatterbox' || vars.TTS_REFERENCE_AUDIO_PATH != '' }}
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.6.0 torchaudio==2.6.0
+          python -m pip install --disable-pip-version-check -r requirements-chatterbox.txt
+
+      - name: Prepare private voice reference
+        id: voice-reference
+        env:
+          TTS_REFERENCE_AUDIO_BASE64: ${{ secrets.TTS_REFERENCE_AUDIO_BASE64 }}
+          TTS_REFERENCE_AUDIO_PATH: ${{ vars.TTS_REFERENCE_AUDIO_PATH }}
+        run: |
+          if [ -n "$TTS_REFERENCE_AUDIO_BASE64" ]; then
+            umask 077
+            reference_path="$RUNNER_TEMP/tts-reference.mp3"
+            printf '%s' "$TTS_REFERENCE_AUDIO_BASE64" | base64 --decode > "$reference_path"
+            test -s "$reference_path"
+            echo "path=$reference_path" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=$TTS_REFERENCE_AUDIO_PATH" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Load Gemini keys from Firebase vault
         env:
@@ -75,6 +104,12 @@ jobs:
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
           TTS_VOICE: ${{ vars.TTS_VOICE || 'hi-IN-MadhurNeural' }}
+          TTS_BACKEND: ${{ vars.TTS_BACKEND || 'auto' }}
+          TTS_REFERENCE_AUDIO_PATH: ${{ steps.voice-reference.outputs.path }}
+          CHATTERBOX_DEVICE: ${{ vars.CHATTERBOX_DEVICE || 'auto' }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ vars.ELEVENLABS_VOICE_ID || '2cdvnKJ5TZi631y5PN1s' }}
+          ELEVENLABS_MODEL: ${{ vars.ELEVENLABS_MODEL || 'eleven_multilingual_v2' }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           LICENSED_MUSIC_CATALOG_JSON: ${{ secrets.LICENSED_MUSIC_CATALOG_JSON }}
           YT_PRIVACY_STATUS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.privacy_status || vars.YT_PRIVACY_STATUS || 'public' }}
