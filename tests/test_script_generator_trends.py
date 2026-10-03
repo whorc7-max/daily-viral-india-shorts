@@ -1,3 +1,5 @@
+import json
+import re
 import unittest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock, patch
@@ -96,6 +98,20 @@ class YouTubeTrendTests(unittest.TestCase):
         self.assertEqual(trends, ["India trend"])
         self.assertEqual(self.generator.trend_source_urls, [TREND_PAGE_URL])
         self.assertEqual(get.call_count, 1)
+
+    def test_script_rejects_latin_text_before_voiceover_fallback(self):
+        response = Mock(text=json.dumps({"voiceover_script": "आज का Short देखिए"}))
+        client = Mock()
+        client.models.generate_content.return_value = response
+        self.generator.clients = [client]
+        self.generator.trend_source_urls = [TREND_PAGE_URL]
+        self.generator._trends = Mock(return_value=["India versus West Indies"])
+
+        with patch("src.script_generator.time.sleep"):
+            content = self.generator.generate()
+
+        self.assertEqual(client.models.generate_content.call_count, 3)
+        self.assertIsNone(re.search(r"[A-Za-z0-9#@&/]", content["voiceover_script"]))
 
 
 if __name__ == "__main__":
