@@ -8,10 +8,23 @@ from src.voice_generator import (
     DEFAULT_ELEVENLABS_MODEL,
     DEFAULT_ELEVENLABS_VOICE_ID,
     VoiceGenerator,
+    _split_chatterbox_text,
 )
 
 
 class VoiceGeneratorTests(unittest.TestCase):
+    def test_chatterbox_text_splits_at_sentence_or_word_limit(self):
+        chunks = _split_chatterbox_text(
+            "एक दो तीन चार पाँच छह सात आठ नौ दस। ग्यारह बारह।",
+            max_words=5,
+        )
+
+        self.assertEqual(
+            chunks,
+            ["एक दो तीन चार पाँच।", "छह सात आठ नौ दस।", "ग्यारह बारह।"],
+        )
+        self.assertTrue(all(len(chunk.split()) <= 5 for chunk in chunks))
+
     def test_elevenlabs_writes_audio_using_configured_voice(self):
         response = Mock(content=b"mp3-audio")
         requests = Mock()
@@ -165,6 +178,67 @@ class VoiceGeneratorTests(unittest.TestCase):
                 generator.generate("Namaste duniya", "voice.mp3")
 
         edge.assert_not_awaited()
+
+    def test_chatterbox_reuses_reference_across_short_speech_chunks(self):
+        torch = Mock()
+        torch.cuda.is_available.return_value = False
+        torch.backends.mps.is_available.return_value = False
+        torch.float32 = "float32"
+        torch.zeros.return_value = Mock(name="silence")
+        combined_audio = Mock(name="combined-audio")
+        torch.cat.return_value = combined_audio
+        torchaudio = Mock()
+        generated_audio = Mock()
+        generated_audio.shape = (1, 24000)
+        generated_audio.dtype = "float32"
+        generated_audio.device = "cpu"
+        generated_audio.detach.return_value = generated_audio
+        generated_audio.cpu.return_value = generated_audio
+        model = Mock(sr=24000)
+        model.generate.return_value = generated_audio
+        chatterbox_class = Mock()
+        chatterbox_class.from_pretrained.return_value = model
+        chatterbox_module = Mock()
+        chatterbox_module.__path__ = []
+        mtl_module = Mock(ChatterboxMultilingualTTS=chatterbox_class)
+
+        def fake_subprocess(args, **kwargs):
+            if args[0] == "ffmpeg":
+                Path(args[-1]).write_bytes(b"audio")
+                return Mock()
+            return Mock(stdout="20.0\n")
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            reference_path = str(Path(temp_dir) / "recording.mp3")
+            output_path = str(Path(temp_dir) / "voice.mp3")
+            Path(reference_path).write_bytes(b"reference-audio")
+            text = " ".join(f"शब्द{index}" for index in range(85))
+            with (
+                patch.dict(os.environ, {
+                    "TTS_BACKEND": "chatterbox",
+                    "TTS_REFERENCE_AUDIO_PATH": reference_path,
+                    "CHATTERBOX_DEVICE": "auto",
+                    "ELEVENLABS_API_KEY": "",
+                }),
+                patch.dict("sys.modules", {
+                    "torch": torch,
+                    "torchaudio": torchaudio,
+                    "chatterbox": chatterbox_module,
+                    "chatterbox.mtl_tts": mtl_module,
+                }),
+                patch("src.voice_generator.subprocess.run", side_effect=fake_subprocess),
+            ):
+                duration = VoiceGenerator().generate(text, output_path)
+
+        self.assertEqual(duration, 20.0)
+        self.assertEqual(model.generate.call_count, 3)
+        calls = model.generate.call_args_list
+        self.assertTrue(calls[0].kwargs["audio_prompt_path"].endswith("reference.wav"))
+        self.assertIsNone(calls[1].kwargs["audio_prompt_path"])
+        self.assertIsNone(calls[2].kwargs["audio_prompt_path"])
+        self.assertTrue(all(c.kwargs["language_id"] == "hi" for c in calls))
+        self.assertEqual(len(torch.cat.call_args.args[0]), 5)
+        self.assertEqual(torch.cat.call_args.kwargs["dim"], -1)
 
 
 if __name__ == "__main__":
