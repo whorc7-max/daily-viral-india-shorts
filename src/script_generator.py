@@ -51,21 +51,21 @@ def _fallback_content(trends: list[str]) -> dict:
     topic = trends[0] if trends else "भारत में तेजी से उभरता लोकप्रिय विषय"
     topic = re.sub(r"^\[YouTube [^\]]+\]\s*", "", topic).split(" | ", 1)[0].strip(' "')
     sentences = [
-        f"आज तेजी से ध्यान खींच रहा विषय है: {topic}।",
-        "किसी वीडियो पर views तेजी से बढ़ना दर्शकों की रुचि का संकेत है, अपने आप में किसी दावे का प्रमाण नहीं।",
-        "इस विषय को समझने के लिए मूल वीडियो का पूरा संदर्भ, तारीख और उपलब्ध पुष्टि देखना जरूरी है।",
-        "किसी छोटे clip से पूरी घटना या किसी व्यक्ति की मंशा तय करना सही नहीं होगा।",
-        "अगर यह खेल, मनोरंजन, संगीत या गेमिंग का पल है, तो मूल संदर्भ और संबंधित लोगों की प्रतिक्रिया अहम है।",
+        "आज भारत में चर्चा का एक विषय तेजी से ध्यान खींच रहा है।",
+        "किसी दृश्य पर दर्शकों की बढ़ती संख्या उनकी रुचि दिखाती है, अपने आप में किसी दावे का प्रमाण नहीं।",
+        "इस विषय को समझने के लिए मूल सामग्री का पूरा संदर्भ, तारीख और उपलब्ध पुष्टि देखना जरूरी है।",
+        "किसी छोटे अंश से पूरी घटना या किसी व्यक्ति की मंशा तय करना सही नहीं होगा।",
+        "अगर यह खेल, मनोरंजन, संगीत या ऑनलाइन खेल का पल है, तो मूल संदर्भ और संबंधित लोगों की प्रतिक्रिया अहम है।",
         "अगर इसमें कोई सार्वजनिक दावा या संवेदनशील खबर है, तो उसे भरोसेमंद स्रोतों से जांचे बिना सच न कहें।",
-        "तेजी से फैलने वाले clips कभी-कभी पूरी कहानी नहीं दिखाते, इसलिए संदर्भ को नजरअंदाज न करें।",
+        "तेजी से फैलने वाले दृश्य कभी-कभी पूरी कहानी नहीं दिखाते, इसलिए संदर्भ को नजरअंदाज न करें।",
         "आज हम उपलब्ध जानकारी को आसान भाषा में रखेंगे और अनुमान को तथ्य की तरह पेश नहीं करेंगे।",
         "इस तरह के पलों में दर्शकों की प्रतिक्रिया भी कहानी का हिस्सा बन जाती है।",
         "किसी मजेदार या हैरान करने वाले पल को साझा करते समय उसमें शामिल लोगों की गरिमा का ध्यान रखें।",
-        "लोकप्रियता बदलती रहती है, लेकिन सही संदर्भ किसी भी trend को समझने में मदद करता है।",
-        "हम किसी मूल video की आवाज, script या footage की नकल किए बिना अपनी commentary दे रहे हैं।",
-        "नई पुष्टि सामने आए तो इस विषय की समझ भी बदल सकती है, इसलिए अपडेट पर नजर रखना बेहतर है।",
-        "आपको इस trend का सबसे दिलचस्प पहलू क्या लगा, अपनी राय बताइए।",
-        "ऐसे ही तेजी से उभरते विषयों पर साफ और जिम्मेदार हिंदी updates के लिए जुड़े रहिए।",
+        "लोकप्रियता बदलती रहती है, लेकिन सही संदर्भ किसी भी चलन को समझने में मदद करता है।",
+        "हम किसी मूल दृश्य की आवाज, लिखावट या फुटेज की नकल किए बिना अपनी टिप्पणी दे रहे हैं।",
+        "नई पुष्टि सामने आए तो इस विषय की समझ भी बदल सकती है, इसलिए नई जानकारी पर नजर रखना बेहतर है।",
+        "आपको इस चलन का सबसे दिलचस्प पहलू क्या लगा, अपनी राय बताइए।",
+        "ऐसे ही तेजी से उभरते विषयों पर साफ और जिम्मेदार हिंदी जानकारी के लिए जुड़े रहिए।",
     ]
     keywords = ["India trending topic", "viral moment", "popular culture", "people reaction"]
     return {
@@ -79,7 +79,7 @@ def _fallback_content(trends: list[str]) -> dict:
         "visual_keywords": keywords,
         "visual_scenes": [
             {
-                "search_query": keywords[index],
+                "search_query": keywords[index % len(keywords)],
                 "image_prompt": f"Editorial vertical visual illustrating: {sentence}",
                 "voiceover_text": sentence,
             }
@@ -255,8 +255,9 @@ title, description, tags, voiceover_script, visual_keywords, visual_scenes, sour
 
 Rules:
 - Write natural Hindi in Devanagari, approximately 220-300 words at normal speaking speed so the voiceover stays near 120-180 seconds.
-- Make the script natural for a clear Hindi voiceover; narration is not displayed as on-screen text.
-- Hook viewers in the first sentence and keep sentences short for visual pacing.
+- Make the script easy to understand when spoken aloud: use common Hindi words, one clear thought per sentence, and natural pauses.
+- In voiceover_script and voiceover_text, use Devanagari words and Hindi punctuation only. Do not use Latin letters, English words, digits, hashtags, URLs, slashes, or abbreviations; express names, terms, and numbers as they should be spoken in Hindi.
+- Hook viewers in the first sentence and keep sentences short, usually 8-16 spoken words, for clear narration and visual pacing.
 - Choose from funny/comedy, emotional/heart-touching, amazing/surprising, viral moments, interesting incidents, sports, gaming, movies/entertainment, music trends, celebrity/public-interest news, or memes/internet trends.
 - When YouTube candidates are supplied, choose one topic from those candidates and prioritize the highest average views-per-hour-since-upload signal; call it "viral" only when the available evidence supports that description.
 - Treat views and view velocity as a discovery signal, not proof that a video's claims are true; add original commentary and do not copy its script, audio, or footage.
@@ -294,7 +295,13 @@ Rules:
                             response_mime_type="application/json",
                         ),
                     )
-                    content = _clean_json(response.text)
+                    candidate = _clean_json(response.text)
+                    spoken_text = str(candidate.get("voiceover_script") or "")
+                    if re.search(r"[A-Za-z0-9#@&/]", spoken_text):
+                        raise ValueError(
+                            "voiceover_script must use spoken Hindi in Devanagari without Latin letters or digits"
+                        )
+                    content = candidate
                     break
                 except Exception as exc:
                     print(

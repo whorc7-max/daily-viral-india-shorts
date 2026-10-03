@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 import subprocess
 import tempfile
 import time
@@ -9,6 +10,53 @@ VOICE_NAME = os.environ.get("TTS_VOICE", "hi-IN-MadhurNeural")
 VOICE_RATE = os.environ.get("TTS_RATE", "+0%")
 DEFAULT_ELEVENLABS_VOICE_ID = "2cdvnKJ5TZi631y5PN1s"
 DEFAULT_ELEVENLABS_MODEL = "eleven_multilingual_v2"
+CHATTERBOX_MAX_WORDS_PER_CHUNK = 40
+
+
+def _split_chatterbox_text(
+    text: str,
+    max_words: int = CHATTERBOX_MAX_WORDS_PER_CHUNK,
+) -> list[str]:
+    if max_words < 1:
+        raise ValueError("max_words must be positive")
+
+    sentences = [
+        sentence.strip()
+        for sentence in re.split(r"(?<=[।.!?])\s+", text.strip())
+        if sentence.strip()
+    ]
+    chunks = []
+    current = []
+    word_count = 0
+
+    for sentence in sentences:
+        words = sentence.split()
+        while words:
+            if (
+                current
+                and len(words) <= max_words
+                and word_count + len(words) > max_words
+            ):
+                chunks.append(" ".join(current))
+                current = []
+                word_count = 0
+
+            part_words = words[: max_words - word_count]
+            words = words[len(part_words) :]
+            part = " ".join(part_words)
+            if words:
+                part = part.rstrip("।.!?") + "।"
+            current.append(part)
+            word_count += len(part_words)
+
+            if word_count == max_words:
+                chunks.append(" ".join(current))
+                current = []
+                word_count = 0
+
+    if current:
+        chunks.append(" ".join(current))
+    return chunks
 
 
 class VoiceGenerator:
@@ -109,10 +157,31 @@ class VoiceGenerator:
                 device=device,
                 t3_model="v3",
             )
-            audio = model.generate(
-                text,
-                language_id="hi",
-                audio_prompt_path=normalized_reference,
+            text_chunks = _split_chatterbox_text(text)
+            if not text_chunks:
+                raise ValueError("Hindi voiceover text cannot be empty")
+
+            audio_parts = []
+            for index, text_chunk in enumerate(text_chunks):
+                print(f"  Synthesizing speech chunk {index + 1}/{len(text_chunks)}")
+                audio = model.generate(
+                    text_chunk,
+                    language_id="hi",
+                    audio_prompt_path=normalized_reference if index == 0 else None,
+                )
+                audio_parts.append(audio)
+                if index < len(text_chunks) - 1:
+                    silence = torch.zeros(
+                        (audio.shape[0], round(model.sr * 0.2)),
+                        dtype=audio.dtype,
+                        device=audio.device,
+                    )
+                    audio_parts.append(silence)
+
+            audio = (
+                audio_parts[0]
+                if len(audio_parts) == 1
+                else torch.cat(audio_parts, dim=-1)
             )
             torchaudio.save(generated_wav, audio.detach().cpu(), model.sr)
             subprocess.run(

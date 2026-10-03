@@ -108,11 +108,18 @@ def main() -> None:
     keys = _configured_keys()
     if not keys:
         return
-    # This output is redirected to GitHub's environment file by the workflow.
-    print(f"{KEY_OUTPUT_PREFIX}_API_KEY={keys[0]}")
-    print(f"{KEY_OUTPUT_PREFIX}_API_KEYS={','.join(keys)}")
+
+    github_env = os.environ.get("GITHUB_ENV", "").strip()
+    if not github_env:
+        raise RuntimeError("GITHUB_ENV is required; refusing to print API keys")
+
+    with open(github_env, "a", encoding="utf-8") as env_file:
+        env_file.write(f"{KEY_OUTPUT_PREFIX}_API_KEY={keys[0]}\n")
+        env_file.write(f"{KEY_OUTPUT_PREFIX}_API_KEYS={','.join(keys)}\n")
+
+    for key in keys:
+        print(f"::add-mask::{key}")
 
 
 if __name__ == "__main__":
     main()
-
